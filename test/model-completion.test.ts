@@ -1,13 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import type { Context } from "@earendil-works/pi-ai";
 import type { ModelRegistry } from "@earendil-works/pi-coding-agent";
 import { completeModel, lowestSupportedThinkingLevel } from "../src/model-completion.ts";
 
 type Model = NonNullable<ReturnType<ModelRegistry["find"]>>;
 type Provider = NonNullable<ReturnType<ModelRegistry["getProvider"]>>;
 type StreamSimple = Provider["streamSimple"];
-type Context = Parameters<StreamSimple>[1];
 type StreamOptions = NonNullable<Parameters<StreamSimple>[2]>;
+type RegistryStreamOptions = NonNullable<Parameters<ModelRegistry["streamSimple"]>[2]>;
 type AssistantMessage = Awaited<ReturnType<ReturnType<StreamSimple>["result"]>>;
 
 const unsupportedThinkingLevels = {
@@ -40,7 +41,7 @@ function context(): Context {
   return {
     systemPrompt: "SLYE system prompt",
     messages: [{ role: "user", content: "SLYE context and target", timestamp: 0 }],
-  } as Context;
+  };
 }
 
 function result(): AssistantMessage {
@@ -150,6 +151,54 @@ test("dispatches an off request with the original model and forwarded auth", asy
     env: { REGION: "test" },
   });
   assert.equal(Object.hasOwn(receivedOptions ?? {}, "reasoning"), false);
+});
+
+test("sends an off request through the registry with the original model and context", async () => {
+  const signal = new AbortController().signal;
+  const selectedModel = model({ reasoning: false });
+  const selectedContext = context();
+  let receivedModel: Model | undefined;
+  let receivedContext: Context | undefined;
+  let receivedOptions: RegistryStreamOptions | undefined;
+  const registry = {
+    streamSimple(effectiveModel: Model, requestContext: Context, options: RegistryStreamOptions) {
+      receivedModel = effectiveModel;
+      receivedContext = requestContext;
+      receivedOptions = options;
+      return { result: async () => result() };
+    },
+  } as unknown as ModelRegistry;
+
+  assert.deepEqual(
+    await completeModel(registry, selectedModel, selectedContext, {
+      signal,
+      cacheRetention: "none",
+      sessionId: "session",
+    }),
+    result(),
+  );
+  assert.strictEqual(receivedModel, selectedModel);
+  assert.strictEqual(receivedContext, selectedContext);
+  assert.deepEqual(receivedOptions, { signal, cacheRetention: "none", sessionId: "session" });
+});
+
+test("sends the lowest supported reasoning level through the registry", async () => {
+  const signal = new AbortController().signal;
+  let receivedOptions: RegistryStreamOptions | undefined;
+  const registry = {
+    streamSimple(_effectiveModel: Model, _requestContext: Context, options: RegistryStreamOptions) {
+      receivedOptions = options;
+      return { result: async () => result() };
+    },
+  } as unknown as ModelRegistry;
+
+  await completeModel(registry, model({ thinkingLevelMap: { off: null, minimal: null } }), context(), {
+    signal,
+    cacheRetention: "none",
+    sessionId: "session",
+  });
+
+  assert.deepEqual(receivedOptions, { signal, cacheRetention: "none", sessionId: "session", reasoning: "low" });
 });
 
 test("copies without mutating the model when auth overrides its base URL", async () => {

@@ -3,7 +3,7 @@ id: doc-6
 title: Customize the SLYE system prompt
 type: guide
 created_date: '2026-09-25 20:30'
-updated_date: '2026-09-27 22:41'
+updated_date: '2026-10-20 13:42'
 ---
 # Customize the SLYE system prompt
 
@@ -39,7 +39,7 @@ Every actual rewrite in these steps makes a secondary provider request. Obtain e
 
 1. Configure a model with `/slye model` if needed.
 2. Obtain a fresh completed assistant response, then run `/slye` (or let automatic mode handle an eligible response).
-3. Check the new companion against your custom instructions. Model compliance can vary; original responses stay unchanged.
+3. Check the new companion against your custom instructions. Model compliance can vary; original responses stay unchanged. To confirm the file is loaded at all, temporarily add an unmistakable instruction (for example, "rewrite everything in pirate speak") and check that the card follows it.
 4. Edit the prompt file and test on another fresh response. The next attempt rereads the file without restarting Pi or OMP. A response that already has a card will not be rewritten again.
 
 For an OMP project-prompt check, use a disposable project and place a temporary, recognizable instruction in `.omp/slye-prompt.md`. After authorization, rewrite a fresh response and record the visible instruction effect in the companion card. This verifies that OMP loads the project prompt for that run; it does not prove raw provider-request capture, every precedence case, or behavior in other OMP versions. Remove only the temporary prompt file when finished.

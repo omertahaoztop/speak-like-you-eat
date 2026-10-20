@@ -3,7 +3,7 @@ id: doc-1
 title: SLYE MVP specification
 type: specification
 created_date: '2026-08-13 23:14'
-updated_date: '2026-09-27 22:58'
+updated_date: '2026-10-20 13:26'
 ---
 # SLYE MVP specification
 
@@ -49,7 +49,7 @@ Pi loads the existing `src/index.ts` implementation. OMP loads `src/omp.ts`, a h
 
 ## Rewrite behavior
 
-- Before each rewrite, resolve and recheck the configured authenticated secondary model from the host registry, derive its lowest currently supported thinking level, and make one direct `streamSimple` completion through its effective provider without changing the host's active conversation model or thinking. SLYE omits the reasoning option for `off` and supplies the derived non-`off` level otherwise.
+- Before each rewrite, resolve and recheck the configured authenticated secondary model from the host registry, derive its lowest currently supported thinking level, and make one `streamSimple` completion without changing the host's active conversation model or thinking. On Pi 0.86 and later SLYE calls the host model registry's `streamSimple`, which applies request authentication and folds the system prompt into the provider transcript. Older Pi hosts and OMP use the selected provider's `streamSimple` with explicitly resolved authentication. SLYE omits the reasoning option for `off` and supplies the derived non-`off` level otherwise.
 - The completion receives the selected system prompt (built-in or custom) and one user message containing the complete target plus at most 8,000 characters of recent natural-language context from no more than two preceding user-led turns and relevant intermediate assistant prose. A final instruction after the source reminds the model to return only the rewritten target, not answer it.
 - Apart from its explicit configuration and `slye-prompt.md` files, SLYE does not load project files, `AGENTS.md`, skills, prompt templates, tools, or full session history, and does not create an `AgentSession` or `ResourceLoader`.
 - This isolation guarantee covers data and behavior supplied by SLYE. Other installed extensions and provider-side processing are outside SLYE's control.
