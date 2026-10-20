@@ -9,3 +9,13 @@
 **Practical consequence.** Keep SLYE single-purpose as a plain-language companion. When users want output styles, compose a dedicated output-style extension on the original response before SLYE instead of adding a second style system inside SLYE. Do not retry companion styles without materially new evidence.
 
 **Links.** [SLYE MVP specification](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md)
+
+## 2026-10-20 — Provider-level `streamSimple` no longer receives the system prompt on Pi 0.86+
+
+**Hypothesis.** Passing `{ systemPrompt, messages }` to `registry.getProvider(...).streamSimple` sends the system prompt to the model on every supported Pi host.
+
+**Evidence.** Since pi-ai 0.86.0, provider `streamSimple` implementations expect a `TranscriptContext` produced by `normalizeContext()` and ignore `Context.systemPrompt`. With Pi 1.3.0, a local fake provider received only `["user"]` messages from SLYE's rewrite request. With real models and a pirate system prompt (`ollama-cloud/gpt-oss:120b` through `completeModel`, then `ollama-cloud/deepseek-v4.1-flash` with a pirate `slye-prompt.md` in a full Pi session), the `main` path returned an ordinary answer while the fixed build, which calls `ModelRegistry.streamSimple`, returned pirate speak. Tests had not caught it because the lockfile resolved the host packages to Pi 0.84.1. The benchmark used `ModelRuntime.completeSimple`, which normalizes, so its results are unaffected.
+
+**Practical consequence.** On Pi, send secondary completions through `ctx.modelRegistry.streamSimple` (or another normalizing entry point), never a raw `Context` to a provider. Keep the host packages pinned in `devDependencies` and the `test/system-prompt-delivery.test.ts` regression, which uses a real `ModelRegistry` against a local HTTP provider.
+
+**Links.** TASK-19; [SLYE MVP specification](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md)
