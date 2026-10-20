@@ -67,7 +67,7 @@ Models that I recommend:
 - SLYE's built-in prompt tells the model to preserve the target response's language and intentional language mix rather than translate it. A custom prompt replaces those instructions.
 - Each target has at most one persistent companion card. A secondary provider request has its own cost and latency and happens only for an automatically eligible response or an eligible, not-yet-completed manual target.
 - Escape cancels a rewrite. Cancellation, timeout, and provider failures leave the original unchanged and permit a manual retry. Storage failures have [host-specific retry limitations](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md#interaction-and-failures).
-- SLYE sends an isolated payload directly to the selected provider. Apart from its explicit configuration and optional `slye-prompt.md`, it does not load project files, project instructions, skills, prompt templates, tools, or the full session history. Other extensions and provider-side processing are outside SLYE's control.
+- SLYE sends an isolated payload to the selected model through the host's model registry. Apart from its explicit configuration and optional `slye-prompt.md`, it does not load project files, project instructions, skills, prompt templates, tools, or the full session history. Other extensions and provider-side processing are outside SLYE's control.
 
 ## Evidence
 
