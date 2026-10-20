@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/wtfzambo/speak-like-you-eat/compare/v1.4.0...v1.4.1) (2026-10-20)
+
+
+### Bug Fixes
+
+* deliver the SLYE system prompt on Pi 0.86+ ([d2a346c](https://github.com/wtfzambo/speak-like-you-eat/commit/d2a346cc3dc2814d75e2b4b4259d25429d72a519))
+* deliver the SLYE system prompt on Pi 0.86+ ([56ef69f](https://github.com/wtfzambo/speak-like-you-eat/commit/56ef69ff1cc2cbd4af25636878210a85c333a25c))
+
 ## [1.4.0](https://github.com/wtfzambo/speak-like-you-eat/compare/v1.3.0...v1.4.0) (2026-09-28)
 
 
