@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildRewriteContext, completeRewrite, REWRITE_TIMEOUT_MS } from "../src/model-rewrite.ts";
+import {
+  buildRewriteContext,
+  completeRewrite,
+  REWRITE_TIMEOUT_MS,
+  UNSLOP_SYSTEM_PROMPT,
+} from "../src/model-rewrite.ts";
 
 const expectedSystemPromptLines = [
   "You are a text editor, not a participant in the source conversation.",
@@ -42,6 +47,19 @@ test("builds one isolated user message with labelled context, the complete targe
     /Target \*\*Markdown\*\* with `command` and https:\/\/example\.test\/path\./,
   );
   assert.deepEqual(context.systemPrompt.split("\n"), expectedSystemPromptLines);
+});
+
+test("uses the Rewrite prompt that preserves language and facts without em dashes, forced threes, synonym cycling, or false ranges", () => {
+  assert.match(
+    UNSLOP_SYSTEM_PROMPT,
+    /Preserve the target's original language and intentional language mix; do not translate\./,
+  );
+  assert.match(UNSLOP_SYSTEM_PROMPT, /Preserve the meaning and every fact/);
+  assert.match(UNSLOP_SYSTEM_PROMPT, /Add no facts\./);
+  assert.match(UNSLOP_SYSTEM_PROMPT, /Never use em dashes/);
+  assert.match(UNSLOP_SYSTEM_PROMPT, /forced groups of three/);
+  assert.match(UNSLOP_SYSTEM_PROMPT, /synonym cycling/);
+  assert.match(UNSLOP_SYSTEM_PROMPT, /false ranges/);
 });
 
 test("uses a custom system prompt verbatim without changing the user message", async () => {

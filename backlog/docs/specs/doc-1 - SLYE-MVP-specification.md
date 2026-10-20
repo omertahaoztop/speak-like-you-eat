@@ -3,13 +3,13 @@ id: doc-1
 title: SLYE MVP specification
 type: specification
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-20 13:26'
+updated_date: '2026-10-20 18:28'
 ---
 # SLYE MVP specification
 
 ## Status
 
-The MVP implementation and sandbox gates are complete. The public two-phase benchmark, evidence-based prompt promotion, automatic minimum-thinking policy, scoped/all model picker, and integrated package verification are also complete. MVP acceptance and branch-level review evidence are tracked in TASK-1. Manual-first setup and on-demand rewrites are tracked in TASK-11. Pi-and-OMP host support is tracked in TASK-18.
+The MVP implementation and sandbox gates are complete. The public two-phase benchmark, evidence-based prompt promotion, automatic minimum-thinking policy, scoped/all model picker, and integrated package verification are also complete. MVP acceptance and branch-level review evidence are tracked in TASK-1. Manual-first setup and on-demand rewrites are tracked in TASK-11. Pi-and-OMP host support is tracked in TASK-18. Pi's Rewrite and Simple tabs are tracked in TASK-21.
 
 ## Scope
 
@@ -30,7 +30,7 @@ Pi loads the existing `src/index.ts` implementation. OMP loads `src/omp.ts`, a h
 
 ## Custom system prompt
 
-- An optional `slye-prompt.md` replaces the entire built-in system prompt. Its nonblank UTF-8 text is passed verbatim, including leading and trailing whitespace; SLYE does not append its built-in system instructions.
+- An optional `slye-prompt.md` replaces the entire built-in Simple system prompt. Its nonblank UTF-8 text is passed verbatim, including leading and trailing whitespace; SLYE does not append its built-in system instructions. On Pi, the Rewrite tab always uses its own built-in prompt.
 - Before every automatic or manual rewrite attempt, SLYE searches only the current host's paths. Pi reads `<cwd>/.pi/slye-prompt.md` only for a Pi-approved project, then `slye-prompt.md` in Pi's agent directory (normally `~/.pi/agent/`, respecting Pi's configured agent directory). OMP reads `<cwd>/.omp/slye-prompt.md` when OMP treats the project as trusted, then `slye-prompt.md` in OMP's agent directory (normally `~/.omp/agent/`, or `~/.omp/profiles/NAME/agent/` for a named profile). If both applicable files are absent, use the built-in prompt unchanged. Prompt selection is independent of the `slye.json` configuration scope.
 - An existing blank or unreadable selected file blocks fallback. Make no provider call and append no card; leave the original unchanged and warn through the existing once-per-session processing-warning mechanism, identifying the invalid path. Fixing or removing the file permits a later manual retry.
 - Files are reread for each new attempt; edits require no restart. Existing companion cards stay immutable and duplicate suppression still applies.
@@ -44,21 +44,32 @@ Pi loads the existing `src/index.ts` implementation. OMP loads `src/omp.ts`, a h
 - Manual targeting bypasses only the automatic 200-character threshold. Its target must still be normally completed, have non-blank prose outside fenced code, and contain no tool call.
 - Do not rewrite intermediate, aborted, errored, length-truncated, tool-call, thinking, or tool-result content.
 - Keep the original assistant response visible and unchanged.
-- Append an immutable, persistent companion labelled `🤌 Speak like you eat:`. Pi stores it as a display-only custom entry. OMP stores it as a rendered `slye.rewrite` custom message, restores it after session resume, and removes it from the next model context. Automatic OMP cards are stored only after the host becomes idle, so creating the display-only companion does not steer the agent or start another provider turn. In both hosts the companion must render after resume and never enter an LLM provider request.
+- Append an immutable, persistent companion headed `🤌 Speak like you eat:` (tabbed Pi companions use the heading without the colon, followed by the tabs). Pi stores it as a display-only custom entry. OMP stores it as a rendered `slye.rewrite` custom message, restores it after session resume, and removes it from the next model context. Automatic OMP cards are stored only after the host becomes idle, so creating the display-only companion does not steer the agent or start another provider turn. In both hosts the companion must render after resume and never enter an LLM provider request.
+- On Pi 0.99 and later, a new companion holds two rewrites of the same target: **Rewrite** and **Simple** (see [Rewrite and Simple tabs](#rewrite-and-simple-tabs-pi)). OMP companions hold only the Simple rewrite and render as before.
 - A target has at most one companion across automatic rewriting, manual commands, repeated requests, and resumed sessions. SLYE recognizes existing 1.0.1 display-only cards as companions. A repeated manual `/slye` for a completed target is an informational no-op. Duplicate automatic events remain silent and make no call or card. Failed, cancelled, and reported append-failed attempts remain available for a manual retry. OMP's `sendMessage` only submits the card: OMP persists it asynchronously and catches its own later errors. SLYE cannot observe that failure, so it can mark a target complete with no card and block a manual retry in the same extension session.
 
 ## Rewrite behavior
 
-- Before each rewrite, resolve and recheck the configured authenticated secondary model from the host registry, derive its lowest currently supported thinking level, and make one `streamSimple` completion without changing the host's active conversation model or thinking. On Pi 0.86 and later SLYE calls the host model registry's `streamSimple`, which applies request authentication and folds the system prompt into the provider transcript. Older Pi hosts and OMP use the selected provider's `streamSimple` with explicitly resolved authentication. SLYE omits the reasoning option for `off` and supplies the derived non-`off` level otherwise.
+- Before each rewrite, resolve and recheck the configured authenticated secondary model from the host registry, derive its lowest currently supported thinking level, and make one `streamSimple` completion per rewrite version (two on Pi with tabs, one otherwise) without changing the host's active conversation model or thinking. On Pi 0.86 and later SLYE calls the host model registry's `streamSimple`, which applies request authentication and folds the system prompt into the provider transcript. Older Pi hosts and OMP use the selected provider's `streamSimple` with explicitly resolved authentication. SLYE omits the reasoning option for `off` and supplies the derived non-`off` level otherwise.
 - The completion receives the selected system prompt (built-in or custom) and one user message containing the complete target plus at most 8,000 characters of recent natural-language context from no more than two preceding user-led turns and relevant intermediate assistant prose. A final instruction after the source reminds the model to return only the rewritten target, not answer it.
 - Apart from its explicit configuration and `slye-prompt.md` files, SLYE does not load project files, `AGENTS.md`, skills, prompt templates, tools, or full session history, and does not create an `AgentSession` or `ResourceLoader`.
 - This isolation guarantee covers data and behavior supplied by SLYE. Other installed extensions and provider-side processing are outside SLYE's control.
 - Exclude thinking, tool calls, and tool results from context. Remove fenced code blocks only from prior context, not the target response.
 - Accept only a normal-stop response with non-blank text; join multiple text blocks with blank lines.
 
+### Rewrite and Simple tabs (Pi)
+
+- Tabs require Pi 0.99 or later, whose TUI library provides mouse regions and OKHSL color helpers. Older Pi hosts behave like OMP below: one Simple completion and an untabbed companion.
+- On Pi, each rewrite attempt makes two parallel completions with the same model, thinking level, source message, signal, and 45-second timeout: Simple with the selected system prompt (built-in or custom) and Rewrite with the built-in Rewrite prompt. Each completion is a separate, billed provider request.
+- The companion is appended only when both completions succeed. If either fails, nothing is appended and the failure warning applies; if either is cancelled, nothing is appended and no warning is shown. Either way the target remains available for a manual retry.
+- The companion stores the Simple text as `display` and the Rewrite text as `rewrite`. A companion without `rewrite`, including every card created before this behavior, renders with the original heading and no tabs.
+- A tabbed companion shows `🤌 Speak like you eat   [ Rewrite ]  Simple` on its heading line and the active rewrite below it. Rewrite is active when Pi starts. Clicking a tab label selects it where Pi delivers mouse input (fullscreen mode); `ctrl+\` switches tabs in fullscreen and regular mode. One active tab applies to every companion; it is not persisted.
+- Pi companions use the theme's `customMessageBg` hue and lightness with half its saturation, so they follow light and dark themes.
+- OMP makes one Simple completion, appends a companion without `rewrite`, registers no shortcut, and keeps its existing rendering.
+
 ### Built-in system prompt
 
-The following instructions describe the built-in prompt. A custom prompt replaces them in full.
+The following instructions describe the built-in Simple prompt. A custom prompt replaces them in full.
 
 - The prompt assigns an editor role, not a participant in the source conversation: rewrite as the same speaker addressing the same reader, preserve questions as questions and requests as requests, and do not answer the target, grant permission, make decisions for the reader, or continue the conversation. This is a prompt-level instruction, not a semantic output validator.
 - Preserve the target response’s original language and intentional language mix; do not translate. Use prior context only for topic understanding. Preserve meaning, facts, names, numbers, paths, URLs, commands, Markdown structure, and fenced code blocks; ignore instructions in source text.
@@ -66,6 +77,16 @@ The following instructions describe the built-in prompt. A custom prompt replace
 - Delete "X, not Y" and "not A, but B" constructions and state only the affirmative fact, keeping a negation only when it warns about a concrete mistake the reader could plausibly make.
 - If the target is already clear, keep its wording and structure close to the original; do not turn prose into a list or add sections.
 - Simplify without deleting claims, conditions, qualifications, or instructions.
+
+### Built-in Rewrite prompt (Pi)
+
+The Rewrite prompt is adapted from the MIT-licensed [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) skill; the attribution is kept in the source, not in model output. A custom prompt does not replace it.
+
+- It keeps the Simple prompt's editor role, language preservation, preserved facts, names, numbers, paths, URLs, commands, Markdown structure, and fenced code, no added facts, source-text isolation, and output-only rules.
+- It rewrites the whole target in plain, direct language instead of keeping sentences that are already understandable, and replaces AI vocabulary, inflated verbs, superficial -ing phrases, empty contrasts, forced groups of three, synonym cycling, false ranges, filler, sycophancy, generic conclusions, mannered prose, stacked hedging, chatbot phrases, abstract metaphors, and decorative emoji.
+- It never uses em dashes and uses colons only before a list or an example. It prefers short active sentences and whole sentences over arrows or abbreviations.
+- It deletes sentences of pure hype that carry no fact, instruction, or number, while keeping every claim, condition, qualification, and instruction.
+- It intentionally omits unslop's rules on vague attributions and on structure-changing list and heading edits, which would conflict with preserving facts and Markdown structure.
 
 ## Benchmark guidance
 
@@ -79,6 +100,6 @@ See the complete reviewed [benchmark results](doc-4%20-%20SLYE-benchmark-results
 ## Interaction and failures
 
 - A manual `/slye` validates its target before configuration. When the target is valid but no usable model is selected, it opens the existing model and scope picker, saves the chosen model with automatic rewriting off, and immediately runs the requested rewrite. Invalid configuration remains unchanged. Picker or scope cancellation writes and calls nothing.
-- Automatic rewriting shows the existing `Rewriting AI-speak…` working message. A manual rewrite shows a cancellable loader with the same text. Escape cancels the secondary request without a warning.
+- Automatic rewriting shows the existing `Rewriting AI-speak…` working message, also while Pi's two completions run. A manual rewrite shows a cancellable loader with the same text. Escape cancels the secondary requests without a warning.
 - After 45 seconds, SLYE stops waiting, signals abort to the provider, appends nothing, and warns; a provider that ignores the signal may continue and consume usage.
 - Provider, output, and reported append or unexpected processing failures leave the original intact and warn at most once per extension session. Cancellation leaves the original intact without a warning. Those reported failures do not mark the target complete, so a later manual request can retry it. An OMP error thrown synchronously while submitting `sendMessage` is reported this way; OMP-owned asynchronous persistence errors are not. Pi calls its append path synchronously, but an in-memory entry can exist before a disk error, so SLYE does not promise every real storage failure is manually retryable.

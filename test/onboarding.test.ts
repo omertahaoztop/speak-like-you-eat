@@ -48,6 +48,7 @@ function createExtension(): {
     registerEntryRenderer() {
       // The display renderer is exercised in display.test.ts.
     },
+    registerShortcut() {},
   } as unknown as ExtensionAPI;
 
   speakLikeYouEat(api);
