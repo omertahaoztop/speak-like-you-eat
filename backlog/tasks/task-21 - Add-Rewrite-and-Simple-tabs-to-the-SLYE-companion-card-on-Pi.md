@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-20 15:56'
-updated_date: '2026-10-20 18:30'
+updated_date: '2026-10-20 21:18'
 labels:
   - feature
 dependencies:
@@ -92,4 +92,6 @@ Scope: Pi only. OMP behavior, rendering and tests stay as they are today.
 
 <!-- SECTION:NOTES:BEGIN -->
 Implementation and three review rounds complete (2026-10-20). Verified: npm run check 137/137; check:omp-load passes on OMP 18.12.2 and fails when a static MouseRegion import is reintroduced; check:old-pi passes on Pi 0.87.1 (no shortcut, untabbed card, one call); real Pi 1.3.0 session with a fake provider: tabbed heading, Rewrite default, click switches text and highlight in fullscreen, ctrl+\ toggles in regular mode. Persisted field named `rewrite` (not shipped before). Pending operator checks: light/dark readability (doc-2 TASK-21 step 4), real-model Rewrite quality on 4-5 responses (step 5), then final review.
+
+Operator decision 2026-10-20: support only the current Pi release. Removed hostSupportsTabs and check:old-pi; tabs are on unless the caller passes tabs:false (OMP). The namespace import of pi-tui stays because OMP lacks MouseRegion/OKHSL helpers and a named import would stop OMP from loading SLYE (check:omp-load still passes).
 <!-- SECTION:NOTES:END -->

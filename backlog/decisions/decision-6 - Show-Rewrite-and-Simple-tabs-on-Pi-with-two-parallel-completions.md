@@ -16,7 +16,7 @@ Show both as tabs on the card's heading line, Rewrite first. Select a tab by cli
 
 Render the Pi card with the theme's `customMessageBg` at half saturation instead of a fixed color, so light and dark themes both stay readable while avoiding Pi 1.0's saturated default violet. A rounded border was rejected because its side characters end up in copied text.
 
-Leave OMP unchanged for now: one Simple completion, no tabs, no shortcut. Stacking both versions on OMP was rejected as visually poor. Keep the tab UI in its own module and turn tabs on only when the host's TUI library exposes the mouse and color helpers it needs, checked at setup. OMP's TUI library and Pi before 0.99 lack them; Pi's loader turns missing exports into undefined rather than failing, so a successful import proves nothing. Those hosts keep the untabbed card and one completion instead of failing to load or rendering a broken card.
+Leave OMP unchanged for now: one Simple completion, no tabs, no shortcut. Stacking both versions on OMP was rejected as visually poor. Keep the tab UI in its own module and reach its mouse and color helpers through a namespace import: OMP's TUI library lacks them, and a named import of a missing member would stop OMP from loading SLYE. Support only the current Pi release; older Pi hosts are out of scope.
 
 ## Consequences
 

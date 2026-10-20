@@ -57,8 +57,7 @@
     "benchmark:phase-2:dry-run": "node benchmark/cli.ts phase-2-dry-run",
     "benchmark:phase-2:run": "node benchmark/cli.ts phase-2-run",
     "benchmark:phase-2:report": "node benchmark/cli.ts phase-2-report",
-    "check:omp-load": "bash scripts/check-omp-load.sh",
-    "check:old-pi": "bash scripts/check-old-pi.sh"
+    "check:omp-load": "bash scripts/check-omp-load.sh"
   },
   "peerDependencies": {
     "@earendil-works/pi-ai": "*",

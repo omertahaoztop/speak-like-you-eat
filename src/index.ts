@@ -23,7 +23,7 @@ import { formatModelCandidate, pickModel, selectModelCandidates } from "./model-
 import { type CompleteRewrite, completeRewrite, type RewriteOutcome, UNSLOP_SYSTEM_PROMPT } from "./model-rewrite.ts";
 import { loadEffectivePrompt, PROMPT_FILENAME } from "./prompt.ts";
 import { type PreparedRewriteRequest, prepareManualRewriteRequest, prepareRewriteRequest } from "./rewrite.ts";
-import { buildLegacyCard, buildTabbedCard, cardBackground, hostSupportsTabs, type SlyeTab } from "./tabs.ts";
+import { buildLegacyCard, buildTabbedCard, cardBackground, type SlyeTab } from "./tabs.ts";
 
 const USAGE = "Usage: /slye [model|on|off]";
 const MISSING_MODEL_GUIDANCE =
@@ -50,7 +50,7 @@ type ManualTargetInspection =
   | { kind: "ready"; prepared: PreparedRewriteRequest };
 
 export default function speakLikeYouEat(pi: ExtensionAPI, options?: { tabs?: boolean }): void {
-  const tabs = options?.tabs !== false && hostSupportsTabs();
+  const tabs = options?.tabs !== false;
   let activeTab: SlyeTab = "rewrite";
   let hasShownStartupWarning = false;
   let hasShownProcessingWarning = false;

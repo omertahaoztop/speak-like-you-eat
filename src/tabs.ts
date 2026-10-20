@@ -1,4 +1,7 @@
 import { getMarkdownTheme, type Theme } from "@earendil-works/pi-coding-agent";
+// OMP maps this package to a TUI library without MouseRegion or the OKHSL
+// helpers, and a named import of a missing member stops OMP from loading SLYE.
+// The namespace import loads there; OMP never renders tabs (it passes tabs: false).
 import * as tui from "@earendil-works/pi-tui";
 import { Box, type Component, Markdown, Text, visibleWidth } from "@earendil-works/pi-tui";
 
@@ -6,16 +9,6 @@ const CARD_PADDING = 1;
 const CARD_HEADING = "🤌 Speak like you eat";
 
 export type SlyeTab = "rewrite" | "simple";
-
-// Pi's loader turns missing named exports into undefined, and OMP lacks these
-// TUI members, so loading the module alone does not prove tab support.
-export function hostSupportsTabs(): boolean {
-  return (
-    typeof tui.MouseRegion === "function" &&
-    typeof tui.colorToOkhsl === "function" &&
-    typeof tui.okhslColor === "function"
-  );
-}
 
 // Keep the legacy builder here so every host shares the one heading and padding.
 export function buildLegacyCard(theme: Theme, display: string, background: (text: string) => string): Box {

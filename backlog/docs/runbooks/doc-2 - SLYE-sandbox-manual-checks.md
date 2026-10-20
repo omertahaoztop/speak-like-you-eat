@@ -3,7 +3,7 @@ id: doc-2
 title: SLYE sandbox manual checks
 type: guide
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-20 18:28'
+updated_date: '2026-10-20 21:18'
 ---
 # SLYE sandbox manual checks
 
@@ -107,7 +107,7 @@ A terminal check cannot observe SLYE's provider payload. Automated evidence that
 
 ### Slice 4 / TASK-11 — manual-first and automatic rewrite checks (provider calls)
 
-Do not run this section now. Every numbered step marked **Provider calls** requires explicit operator approval immediately before it runs. A submitted prompt makes one primary provider call; an actual SLYE rewrite makes two secondary provider calls on Pi 0.99 or later (Rewrite and Simple). Where a step below says "one secondary", count two on those hosts, and expect the tabbed heading `🤌 Speak like you eat   [ Rewrite ]  Simple` where a step names the `🤌 Speak like you eat:` card. Run the preceding picker and configuration checks in sessions separate from the provider-call steps; those checks make no provider calls.
+Do not run this section now. Every numbered step marked **Provider calls** requires explicit operator approval immediately before it runs. A submitted prompt makes one primary provider call; an actual SLYE rewrite makes two secondary provider calls on Pi (Rewrite and Simple). Where a step below says "one secondary", count two on Pi, and expect the tabbed heading `🤌 Speak like you eat   [ Rewrite ]  Simple` where a step names the `🤌 Speak like you eat:` card. Run the preceding picker and configuration checks in sessions separate from the provider-call steps; those checks make no provider calls.
 
 Use a disposable authenticated profile with no existing SLYE configuration for the manual-first check, or record that the first-time case cannot be isolated without changing a protected global configuration. Start Pi from the sandbox only after approval:
 
@@ -126,7 +126,7 @@ pi --approve
 
 ### TASK-21 — Rewrite and Simple tabs on Pi (provider calls)
 
-Before any release that touches `src/`, run `npm run check:omp-load` with OMP installed and `npm run check:old-pi` (installs Pi 0.87.1 in a temporary directory; needs network). Neither makes a model call. They fail if OMP can no longer load SLYE, or if a Pi host without tab support stops getting the untabbed card, which Node tests cannot detect.
+Before any release that touches `src/`, run `npm run check:omp-load` with OMP installed. It makes no model call and fails if OMP can no longer load SLYE, which Node tests cannot detect.
 
 Every rewrite here makes **two** secondary provider calls. Obtain explicit operator approval before each one.
 

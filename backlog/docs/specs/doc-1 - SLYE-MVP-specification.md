@@ -3,7 +3,7 @@ id: doc-1
 title: SLYE MVP specification
 type: specification
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-20 18:28'
+updated_date: '2026-10-20 21:18'
 ---
 # SLYE MVP specification
 
@@ -45,7 +45,7 @@ Pi loads the existing `src/index.ts` implementation. OMP loads `src/omp.ts`, a h
 - Do not rewrite intermediate, aborted, errored, length-truncated, tool-call, thinking, or tool-result content.
 - Keep the original assistant response visible and unchanged.
 - Append an immutable, persistent companion headed `🤌 Speak like you eat:` (tabbed Pi companions use the heading without the colon, followed by the tabs). Pi stores it as a display-only custom entry. OMP stores it as a rendered `slye.rewrite` custom message, restores it after session resume, and removes it from the next model context. Automatic OMP cards are stored only after the host becomes idle, so creating the display-only companion does not steer the agent or start another provider turn. In both hosts the companion must render after resume and never enter an LLM provider request.
-- On Pi 0.99 and later, a new companion holds two rewrites of the same target: **Rewrite** and **Simple** (see [Rewrite and Simple tabs](#rewrite-and-simple-tabs-pi)). OMP companions hold only the Simple rewrite and render as before.
+- On Pi, a new companion holds two rewrites of the same target: **Rewrite** and **Simple** (see [Rewrite and Simple tabs](#rewrite-and-simple-tabs-pi)). OMP companions hold only the Simple rewrite and render as before.
 - A target has at most one companion across automatic rewriting, manual commands, repeated requests, and resumed sessions. SLYE recognizes existing 1.0.1 display-only cards as companions. A repeated manual `/slye` for a completed target is an informational no-op. Duplicate automatic events remain silent and make no call or card. Failed, cancelled, and reported append-failed attempts remain available for a manual retry. OMP's `sendMessage` only submits the card: OMP persists it asynchronously and catches its own later errors. SLYE cannot observe that failure, so it can mark a target complete with no card and block a manual retry in the same extension session.
 
 ## Rewrite behavior
@@ -59,7 +59,7 @@ Pi loads the existing `src/index.ts` implementation. OMP loads `src/omp.ts`, a h
 
 ### Rewrite and Simple tabs (Pi)
 
-- Tabs require Pi 0.99 or later, whose TUI library provides mouse regions and OKHSL color helpers. Older Pi hosts behave like OMP below: one Simple completion and an untabbed companion.
+- SLYE supports the current Pi release only; tabs rely on Pi's mouse regions and OKHSL color helpers.
 - On Pi, each rewrite attempt makes two parallel completions with the same model, thinking level, source message, signal, and 45-second timeout: Simple with the selected system prompt (built-in or custom) and Rewrite with the built-in Rewrite prompt. Each completion is a separate, billed provider request.
 - The companion is appended only when both completions succeed. If either fails, nothing is appended and the failure warning applies; if either is cancelled, nothing is appended and no warning is shown. Either way the target remains available for a manual retry.
 - The companion stores the Simple text as `display` and the Rewrite text as `rewrite`. A companion without `rewrite`, including every card created before this behavior, renders with the original heading and no tabs.

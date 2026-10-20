@@ -3,7 +3,7 @@ id: doc-6
 title: Customize the SLYE system prompt
 type: guide
 created_date: '2026-09-25 20:30'
-updated_date: '2026-10-20 18:28'
+updated_date: '2026-10-20 21:18'
 ---
 # Customize the SLYE system prompt
 
@@ -35,7 +35,7 @@ This is a starting example, not a copy of the complete built-in prompt. Add the 
 
 ## Verify and change it
 
-Every actual rewrite in these steps makes secondary provider requests: two on Pi 0.99 or later (Rewrite and Simple), one on older Pi and on OMP. Obtain explicit operator authorization before starting one.
+Every actual rewrite in these steps makes secondary provider requests: two on Pi (Rewrite and Simple), one on OMP. Obtain explicit operator authorization before starting one.
 
 1. Configure a model with `/slye model` if needed.
 2. Obtain a fresh completed assistant response, then run `/slye` (or let automatic mode handle an eligible response).
