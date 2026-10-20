@@ -232,17 +232,11 @@ function createContext(options: {
       getAvailable() {
         return [model];
       },
-      getProvider() {
-        return {
-          streamSimple(selectedModel: unknown, request: unknown, requestOptions: { signal: AbortSignal }) {
-            assert.strictEqual(selectedModel, model);
-            completionCalls += 1;
-            return { result: () => complete(selectedModel, request, requestOptions) };
-          },
-        };
-      },
-      async getApiKeyAndHeaders() {
-        return { ok: true };
+      // Mirrors Pi 0.86+: completions go through the registry, which resolves provider and auth itself.
+      streamSimple(selectedModel: unknown, request: unknown, requestOptions: { signal: AbortSignal }) {
+        assert.strictEqual(selectedModel, model);
+        completionCalls += 1;
+        return { result: () => complete(selectedModel, request, requestOptions) };
       },
     },
     isProjectTrusted() {
