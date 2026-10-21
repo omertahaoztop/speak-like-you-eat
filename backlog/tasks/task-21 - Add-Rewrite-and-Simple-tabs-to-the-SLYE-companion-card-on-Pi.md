@@ -1,11 +1,11 @@
 ---
 id: TASK-21
-title: Add Rewrite and Simple tabs to the SLYE companion card on Pi
+title: Add ELI5 and Light tabs to the SLYE companion card on Pi
 status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-20 15:56'
-updated_date: '2026-10-20 21:18'
+updated_date: '2026-10-21 15:27'
 labels:
   - feature
 dependencies:
@@ -27,18 +27,21 @@ Users find the current rewrite often too literal: when the source is not heavy j
 - The unslop prompt keeps the existing guarantees (editor role, language preserved, no added facts, Markdown and code unchanged, output only). It adopts the compatible unslop rules, always removes em dashes, and excludes rule 5 (vague attributions) and the structure-changing rules 16 and 17. The MIT attribution goes in a source comment, never in model output.
 - Validation: manual sandbox check on 4-5 real responses, including ones where Simple comes back nearly identical. The benchmark only if that leaves doubts.
 Spike evidence (2026-10-20): a Pi 1.3.0 entry renderer wrapped in MouseRegion receives clicks in fullscreen; registerShortcut + ctx.ui.setStatus re-renders the card in fullscreen and regular mode.
+
+Superseded on 2026-10-21: the second version is now ELI5 (an ADHD-friendly reorganized rewrite, see the 2026-10-21 implementation note and decision-6), the tabs are ELI5 and Light with ELI5 active by default, and ELI5 deliberately relaxes language-mix and Markdown-structure preservation. Where the text above says Rewrite/Simple or unslop-only, the acceptance criteria and decision-6 govern.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 On Pi, an eligible rewrite makes two parallel calls (Simple with the selected prompt, Rewrite with the built-in unslop prompt) and appends one card holding both texts
-- [ ] #2 The card shows Rewrite and Simple tabs on its heading line; Rewrite is active by default and the active tab is highlighted
+- [ ] #1 On Pi, an eligible rewrite makes two parallel calls (Light with the selected prompt, ELI5 with the built-in ELI5 prompt) and appends one card holding both texts
+- [ ] #2 The card shows ELI5 and Light tabs on its heading line; ELI5 is active by default and the active tab is highlighted
 - [ ] #3 Clicking a tab label in fullscreen selects it; ctrl+\ toggles the tab in fullscreen and regular mode; the choice applies to all cards and is not persisted
 - [ ] #4 If either call fails or is cancelled, no card is appended and a manual retry remains possible
-- [ ] #5 A custom slye-prompt.md replaces only the Simple prompt
+- [ ] #5 A custom slye-prompt.md replaces only the Light prompt
 - [ ] #6 Cards created before this change render without tabs; OMP behavior is unchanged
 - [ ] #7 The card background is the theme customMessageBg with halved saturation, readable in light and dark themes
-- [ ] #8 Spec, README, runbooks doc-2 and doc-6 and a new decision describe the behavior; tests cover the criteria above; npm run check passes
+- [ ] #8 ELI5 output leads with the main point, numbers steps, moves side topics last, and replaces jargon (including English business terms in non-English text) with plain words, without dropping facts, on real responses with the configured model
+- [ ] #9 Spec, README, runbooks doc-2 and doc-6 and decision-6 describe the behavior; tests cover the criteria above; npm run check passes
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -94,4 +97,6 @@ Scope: Pi only. OMP behavior, rendering and tests stay as they are today.
 Implementation and three review rounds complete (2026-10-20). Verified: npm run check 137/137; check:omp-load passes on OMP 18.12.2 and fails when a static MouseRegion import is reintroduced; check:old-pi passes on Pi 0.87.1 (no shortcut, untabbed card, one call); real Pi 1.3.0 session with a fake provider: tabbed heading, Rewrite default, click switches text and highlight in fullscreen, ctrl+\ toggles in regular mode. Persisted field named `rewrite` (not shipped before). Pending operator checks: light/dark readability (doc-2 TASK-21 step 4), real-model Rewrite quality on 4-5 responses (step 5), then final review.
 
 Operator decision 2026-10-20: support only the current Pi release. Removed hostSupportsTabs and check:old-pi; tabs are on unless the caller passes tabs:false (OMP). The namespace import of pi-tui stays because OMP lacks MouseRegion/OKHSL helpers and a named import would stop OMP from loading SLYE (check:omp-load still passes).
+
+Live use 2026-10-21: the unslop-based Rewrite prompt kept Italian corporate jargon (worse than Simple). User redefined the goal as an ADHD-friendly, reorganized rewrite (i-have-adhd, MIT, Ayoub Ghriss). New ELI5 prompt trialled on 6 targets (3 real corporate cards, a technical Italian text, an English slop paragraph, a verbose AI answer) with deepseek-v4.1-flash, claude-opus-5-5, gpt-6-luna: jargon translated, main point first, steps numbered, code/paths intact; gpt-6-luna dropped one fact on the long answer; deepseek reorders less. Tabs renamed ELI5/Light (user choice); stored fields unchanged (display = Light, rewrite = ELI5).
 <!-- SECTION:NOTES:END -->

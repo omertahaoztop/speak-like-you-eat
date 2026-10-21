@@ -15,7 +15,7 @@ import {
 import { type Color, colorToOkhsl, okhslColor, visibleWidth } from "@earendil-works/pi-tui";
 import { writeConfigAtomically } from "../src/config.ts";
 import speakLikeYouEat from "../src/index.ts";
-import { UNSLOP_SYSTEM_PROMPT } from "../src/model-rewrite.ts";
+import { ELI5_SYSTEM_PROMPT } from "../src/model-rewrite.ts";
 import { PROMPT_FILENAME } from "../src/prompt.ts";
 
 initTheme("dark", false);
@@ -290,7 +290,7 @@ test("calls the configured authenticated model twice with an isolated exact rewr
     branch,
     async complete(_model, request, options) {
       const context = request as typeof receivedContext;
-      if (context?.systemPrompt === UNSLOP_SYSTEM_PROMPT) {
+      if (context?.systemPrompt === ELI5_SYSTEM_PROMPT) {
         return response("stop", [text("Prima parte."), text("Seconda parte.")]);
       }
 
@@ -357,7 +357,7 @@ test("saves both rewrite texts after two model calls", async (t) => {
     async complete(_model, request) {
       const prompt = (request as { systemPrompt: string }).systemPrompt;
       prompts.push(prompt);
-      return response("stop", [text(prompt === UNSLOP_SYSTEM_PROMPT ? "Rewrite response." : "Simple response.")]);
+      return response("stop", [text(prompt === ELI5_SYSTEM_PROMPT ? "Rewrite response." : "Simple response.")]);
     },
   });
 
@@ -366,7 +366,7 @@ test("saves both rewrite texts after two model calls", async (t) => {
   assert.equal(testContext.completionCalls, 2);
   assert.equal(prompts.length, 2);
   assert.ok(prompts.some((prompt) => prompt.includes("Rewrite only the target in clear, everyday language.")));
-  assert.ok(prompts.some((prompt) => prompt === UNSLOP_SYSTEM_PROMPT));
+  assert.ok(prompts.some((prompt) => prompt === ELI5_SYSTEM_PROMPT));
   assert.deepEqual(extension.appendedEntries, [
     {
       customType: "slye.rewrite",
@@ -401,7 +401,7 @@ test("reloads a global custom prompt for automatic rewrites of different targets
   assert.equal(prompts.length, 4);
   assert.ok(prompts.includes("first custom prompt"));
   assert.ok(prompts.includes("second custom prompt"));
-  assert.equal(prompts.filter((prompt) => prompt === UNSLOP_SYSTEM_PROMPT).length, 2);
+  assert.equal(prompts.filter((prompt) => prompt === ELI5_SYSTEM_PROMPT).length, 2);
   assert.deepEqual(extension.appendedEntries, [
     {
       customType: "slye.rewrite",
@@ -435,11 +435,11 @@ test("uses a custom global prompt for a manual rewrite with automatic rewrites d
 
   assert.equal(prompts.length, 2);
   assert.ok(prompts.includes("manual custom prompt"));
-  assert.ok(prompts.some((prompt) => prompt === UNSLOP_SYSTEM_PROMPT));
+  assert.ok(prompts.some((prompt) => prompt === ELI5_SYSTEM_PROMPT));
   assert.equal(testContext.completionCalls, 2);
 });
 
-test("uses a custom prompt only for the Simple call", async (t) => {
+test("uses a custom prompt only for the Light call", async (t) => {
   const directory = await setupConfiguredDirectory(t, true);
   const globalPromptPath = join(process.env.PI_CODING_AGENT_DIR ?? "", PROMPT_FILENAME);
   const target = longAssistant();
@@ -459,10 +459,10 @@ test("uses a custom prompt only for the Simple call", async (t) => {
   await extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, testContext.context);
 
   assert.ok(prompts.includes("custom simple prompt"));
-  assert.ok(prompts.some((prompt) => prompt === UNSLOP_SYSTEM_PROMPT));
+  assert.ok(prompts.some((prompt) => prompt === ELI5_SYSTEM_PROMPT));
 });
 
-test("warns and remains retryable when Rewrite fails", async (t) => {
+test("warns and remains retryable when ELI5 fails", async (t) => {
   const directory = await setupConfiguredDirectory(t, true);
   const target = longAssistant();
   const branch = [entry("target", target)];
@@ -471,7 +471,7 @@ test("warns and remains retryable when Rewrite fails", async (t) => {
     cwd: directory,
     branch,
     async complete(_model, request) {
-      if ((request as { systemPrompt: string }).systemPrompt === UNSLOP_SYSTEM_PROMPT) {
+      if ((request as { systemPrompt: string }).systemPrompt === ELI5_SYSTEM_PROMPT) {
         throw new Error("Rewrite failed");
       }
       return response("stop", [text("Simple response.")]);
@@ -489,7 +489,7 @@ test("warns and remains retryable when Rewrite fails", async (t) => {
   assert.equal(extension.appendedEntries.length, 1);
 });
 
-test("warns and remains retryable when Simple fails but Rewrite succeeds", async (t) => {
+test("warns and remains retryable when Light fails but ELI5 succeeds", async (t) => {
   const directory = await setupConfiguredDirectory(t, true);
   const target = longAssistant();
   const branch = [entry("target", target)];
@@ -498,7 +498,7 @@ test("warns and remains retryable when Simple fails but Rewrite succeeds", async
     cwd: directory,
     branch,
     async complete(_model, request) {
-      if ((request as { systemPrompt: string }).systemPrompt === UNSLOP_SYSTEM_PROMPT) {
+      if ((request as { systemPrompt: string }).systemPrompt === ELI5_SYSTEM_PROMPT) {
         return response("stop", [text("Rewrite response.")]);
       }
       throw new Error("Simple failed");
@@ -574,7 +574,7 @@ test("uses the global prompt when an untrusted project has an invalid prompt", a
 
   assert.equal(prompts.length, 2);
   assert.ok(prompts.includes("global prompt"));
-  assert.ok(prompts.some((prompt) => prompt === UNSLOP_SYSTEM_PROMPT));
+  assert.ok(prompts.some((prompt) => prompt === ELI5_SYSTEM_PROMPT));
   assert.equal(testContext.completionCalls, 2);
   assert.deepEqual(testContext.notifications, []);
 });
@@ -689,7 +689,7 @@ test("cancels one tab rewrite while the other succeeds without a warning", async
     complete(_model, request, options) {
       calls += 1;
       requestSignals.push(options.signal);
-      if ((request as { systemPrompt: string }).systemPrompt === UNSLOP_SYSTEM_PROMPT) {
+      if ((request as { systemPrompt: string }).systemPrompt === ELI5_SYSTEM_PROMPT) {
         resolveStarted?.();
         return Promise.resolve(response("stop", [text("Rewrite response.")]));
       }
@@ -1164,13 +1164,13 @@ test("renders tabbed cards, switches every card on click, and switches back with
 
   const card = extension.renderer(entry, { expanded: false }, theme as never);
   const secondCard = extension.renderer({ ...entry, id: "saved-two" }, { expanded: false }, theme as never);
-  assert.match(card?.render(120).join("\n") ?? "", /<bold><accent>\[ Rewrite \]<\/accent><\/bold>/);
+  assert.match(card?.render(120).join("\n") ?? "", /<bold><accent>\[ ELI5 \]<\/accent><\/bold>/);
   assert.match(secondCard?.render(120).join("\n") ?? "", /Rewrite text/);
   assert.equal(card?.handleMouse?.({ type: "click", x: 0, y: 1 } as never), undefined);
 
-  const simpleTabX = 1 + visibleWidth("🤌 Speak like you eat   <bold><accent>[ Rewrite ]</accent></bold>  ");
+  const simpleTabX = 1 + visibleWidth("🤌 Speak like you eat   <bold><accent>[ ELI5 ]</accent></bold>  ");
   assert.deepEqual(card?.handleMouse?.({ type: "click", x: simpleTabX, y: 1 } as never), { handled: true });
-  assert.match(card?.render(120).join("\n") ?? "", /<bold><accent>\[ Simple \]<\/accent><\/bold>/);
+  assert.match(card?.render(120).join("\n") ?? "", /<bold><accent>\[ Light \]<\/accent><\/bold>/);
   assert.match(card?.render(120).join("\n") ?? "", /Simple text/);
   assert.match(secondCard?.render(120).join("\n") ?? "", /Simple text/);
 
@@ -1251,7 +1251,7 @@ test("renders legacy cards without tabs and ignores malformed entries", () => {
     theme as never,
   );
   assert.match(restored?.render(120).join("\n") ?? "", /🤌 Speak like you eat:/);
-  assert.doesNotMatch(restored?.render(120).join("\n") ?? "", /\[ Rewrite \]/);
+  assert.doesNotMatch(restored?.render(120).join("\n") ?? "", /\[ ELI5 \]/);
   assert.match(restored?.render(120).join("\n") ?? "", /Saved Markdown/);
   assert.match(metadataRestored?.render(120).join("\n") ?? "", /New Markdown/);
   assert.match(

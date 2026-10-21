@@ -3,13 +3,13 @@ id: doc-1
 title: SLYE MVP specification
 type: specification
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-20 21:18'
+updated_date: '2026-10-21 15:27'
 ---
 # SLYE MVP specification
 
 ## Status
 
-The MVP implementation and sandbox gates are complete. The public two-phase benchmark, evidence-based prompt promotion, automatic minimum-thinking policy, scoped/all model picker, and integrated package verification are also complete. MVP acceptance and branch-level review evidence are tracked in TASK-1. Manual-first setup and on-demand rewrites are tracked in TASK-11. Pi-and-OMP host support is tracked in TASK-18. Pi's Rewrite and Simple tabs are tracked in TASK-21.
+The MVP implementation and sandbox gates are complete. The public two-phase benchmark, evidence-based prompt promotion, automatic minimum-thinking policy, scoped/all model picker, and integrated package verification are also complete. MVP acceptance and branch-level review evidence are tracked in TASK-1. Manual-first setup and on-demand rewrites are tracked in TASK-11. Pi-and-OMP host support is tracked in TASK-18. Pi's ELI5 and Light tabs are tracked in TASK-21.
 
 ## Scope
 
@@ -30,7 +30,7 @@ Pi loads the existing `src/index.ts` implementation. OMP loads `src/omp.ts`, a h
 
 ## Custom system prompt
 
-- An optional `slye-prompt.md` replaces the entire built-in Simple system prompt. Its nonblank UTF-8 text is passed verbatim, including leading and trailing whitespace; SLYE does not append its built-in system instructions. On Pi, the Rewrite tab always uses its own built-in prompt.
+- An optional `slye-prompt.md` replaces the entire built-in Light system prompt. Its nonblank UTF-8 text is passed verbatim, including leading and trailing whitespace; SLYE does not append its built-in system instructions. On Pi, the ELI5 tab always uses its own built-in prompt.
 - Before every automatic or manual rewrite attempt, SLYE searches only the current host's paths. Pi reads `<cwd>/.pi/slye-prompt.md` only for a Pi-approved project, then `slye-prompt.md` in Pi's agent directory (normally `~/.pi/agent/`, respecting Pi's configured agent directory). OMP reads `<cwd>/.omp/slye-prompt.md` when OMP treats the project as trusted, then `slye-prompt.md` in OMP's agent directory (normally `~/.omp/agent/`, or `~/.omp/profiles/NAME/agent/` for a named profile). If both applicable files are absent, use the built-in prompt unchanged. Prompt selection is independent of the `slye.json` configuration scope.
 - An existing blank or unreadable selected file blocks fallback. Make no provider call and append no card; leave the original unchanged and warn through the existing once-per-session processing-warning mechanism, identifying the invalid path. Fixing or removing the file permits a later manual retry.
 - Files are reread for each new attempt; edits require no restart. Existing companion cards stay immutable and duplicate suppression still applies.
@@ -45,7 +45,7 @@ Pi loads the existing `src/index.ts` implementation. OMP loads `src/omp.ts`, a h
 - Do not rewrite intermediate, aborted, errored, length-truncated, tool-call, thinking, or tool-result content.
 - Keep the original assistant response visible and unchanged.
 - Append an immutable, persistent companion headed `🤌 Speak like you eat:` (tabbed Pi companions use the heading without the colon, followed by the tabs). Pi stores it as a display-only custom entry. OMP stores it as a rendered `slye.rewrite` custom message, restores it after session resume, and removes it from the next model context. Automatic OMP cards are stored only after the host becomes idle, so creating the display-only companion does not steer the agent or start another provider turn. In both hosts the companion must render after resume and never enter an LLM provider request.
-- On Pi, a new companion holds two rewrites of the same target: **Rewrite** and **Simple** (see [Rewrite and Simple tabs](#rewrite-and-simple-tabs-pi)). OMP companions hold only the Simple rewrite and render as before.
+- On Pi, a new companion holds two rewrites of the same target: **ELI5** and **Light** (see [ELI5 and Light tabs](#eli5-and-light-tabs-pi)). OMP companions hold only the Light rewrite and render as before.
 - A target has at most one companion across automatic rewriting, manual commands, repeated requests, and resumed sessions. SLYE recognizes existing 1.0.1 display-only cards as companions. A repeated manual `/slye` for a completed target is an informational no-op. Duplicate automatic events remain silent and make no call or card. Failed, cancelled, and reported append-failed attempts remain available for a manual retry. OMP's `sendMessage` only submits the card: OMP persists it asynchronously and catches its own later errors. SLYE cannot observe that failure, so it can mark a target complete with no card and block a manual retry in the same extension session.
 
 ## Rewrite behavior
@@ -57,19 +57,19 @@ Pi loads the existing `src/index.ts` implementation. OMP loads `src/omp.ts`, a h
 - Exclude thinking, tool calls, and tool results from context. Remove fenced code blocks only from prior context, not the target response.
 - Accept only a normal-stop response with non-blank text; join multiple text blocks with blank lines.
 
-### Rewrite and Simple tabs (Pi)
+### ELI5 and Light tabs (Pi)
 
 - SLYE supports the current Pi release only; tabs rely on Pi's mouse regions and OKHSL color helpers.
-- On Pi, each rewrite attempt makes two parallel completions with the same model, thinking level, source message, signal, and 45-second timeout: Simple with the selected system prompt (built-in or custom) and Rewrite with the built-in Rewrite prompt. Each completion is a separate, billed provider request.
+- On Pi, each rewrite attempt makes two parallel completions with the same model, thinking level, source message, signal, and 45-second timeout: Light with the selected system prompt (built-in or custom) and ELI5 with the built-in ELI5 prompt. Each completion is a separate, billed provider request.
 - The companion is appended only when both completions succeed. If either fails, nothing is appended and the failure warning applies; if either is cancelled, nothing is appended and no warning is shown. Either way the target remains available for a manual retry.
-- The companion stores the Simple text as `display` and the Rewrite text as `rewrite`. A companion without `rewrite`, including every card created before this behavior, renders with the original heading and no tabs.
-- A tabbed companion shows `🤌 Speak like you eat   [ Rewrite ]  Simple` on its heading line and the active rewrite below it. Rewrite is active when Pi starts. Clicking a tab label selects it where Pi delivers mouse input (fullscreen mode); `ctrl+\` switches tabs in fullscreen and regular mode. One active tab applies to every companion; it is not persisted.
+- The companion stores the Light text as `display` and the ELI5 text as `rewrite`. A companion without `rewrite`, including every card created before this behavior, renders with the original heading and no tabs.
+- A tabbed companion shows `🤌 Speak like you eat   [ ELI5 ]  Light` on its heading line and the active rewrite below it. ELI5 is active when Pi starts. Clicking a tab label selects it where Pi delivers mouse input (fullscreen mode); `ctrl+\` switches tabs in fullscreen and regular mode. One active tab applies to every companion; it is not persisted.
 - Pi companions use the theme's `customMessageBg` hue and lightness with half its saturation, so they follow light and dark themes.
-- OMP makes one Simple completion, appends a companion without `rewrite`, registers no shortcut, and keeps its existing rendering.
+- OMP makes one Light completion, appends a companion without `rewrite`, registers no shortcut, and keeps its existing rendering.
 
 ### Built-in system prompt
 
-The following instructions describe the built-in Simple prompt. A custom prompt replaces them in full.
+The following instructions describe the built-in Light prompt. A custom prompt replaces them in full.
 
 - The prompt assigns an editor role, not a participant in the source conversation: rewrite as the same speaker addressing the same reader, preserve questions as questions and requests as requests, and do not answer the target, grant permission, make decisions for the reader, or continue the conversation. This is a prompt-level instruction, not a semantic output validator.
 - Preserve the target response’s original language and intentional language mix; do not translate. Use prior context only for topic understanding. Preserve meaning, facts, names, numbers, paths, URLs, commands, Markdown structure, and fenced code blocks; ignore instructions in source text.
@@ -78,15 +78,14 @@ The following instructions describe the built-in Simple prompt. A custom prompt 
 - If the target is already clear, keep its wording and structure close to the original; do not turn prose into a list or add sections.
 - Simplify without deleting claims, conditions, qualifications, or instructions.
 
-### Built-in Rewrite prompt (Pi)
+### Built-in ELI5 prompt (Pi)
 
-The Rewrite prompt is adapted from the MIT-licensed [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) skill; the attribution is kept in the source, not in model output. A custom prompt does not replace it.
+The ELI5 prompt is adapted from the MIT-licensed [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills; the attribution is kept in the source, not in model output. A custom prompt does not replace it. Its goal is a text a tired, easily distracted reader understands on the first read and can act on.
 
-- It keeps the Simple prompt's editor role, language preservation, preserved facts, names, numbers, paths, URLs, commands, Markdown structure, and fenced code, no added facts, source-text isolation, and output-only rules.
-- It rewrites the whole target in plain, direct language instead of keeping sentences that are already understandable, and replaces AI vocabulary, inflated verbs, superficial -ing phrases, empty contrasts, forced groups of three, synonym cycling, false ranges, filler, sycophancy, generic conclusions, mannered prose, stacked hedging, chatbot phrases, abstract metaphors, and decorative emoji.
-- It never uses em dashes and uses colons only before a list or an example. It prefers short active sentences and whole sentences over arrows or abbreviations.
-- It deletes sentences of pure hype that carry no fact, instruction, or number, while keeping every claim, condition, qualification, and instruction.
-- It intentionally omits unslop's rules on vague attributions and on structure-changing list and heading edits, which would conflict with preserving facts and Markdown structure.
+- It keeps the Light prompt's editor role, source-text isolation, no-answering, and output-only rules. It keeps every fact, number, name, condition, warning, question, and instruction, and adds no facts, steps, estimates, questions, offers, or advice. Fenced code, commands, and paths are copied exactly.
+- It writes in the target's main language. Business English inside a non-English target is treated as jargon, not as an intentional language mix, and is replaced with plain words in the main language, as are buzzwords, idioms, and metaphors. Names, code identifiers, URLs, numbers, and technical terms without a common plain equivalent (such as KPI, API, PR, CI) stay.
+- It may reorder the target: main point first, then background; one line of thought; steps as a numbered list in execution order; side topics in one short sentence at the end; the reader's next action last when the target contains one. Lists stay short by grouping, without dropping items, and headings appear only for several separate topics. Markdown structure may therefore change.
+- It cuts empty openers, hype, recaps, pleasantries, sycophancy, filler, repetition, and hedges that add nothing, keeping hedges that carry real uncertainty. It uses short active sentences and common words, states affirmative facts instead of "not X but Y", and never uses em dashes.
 
 ## Benchmark guidance
 

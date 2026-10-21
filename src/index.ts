@@ -20,7 +20,7 @@ import {
 } from "./config.ts";
 import { completeModel, lowestSupportedThinkingLevel, type ThinkingLevel } from "./model-completion.ts";
 import { formatModelCandidate, pickModel, selectModelCandidates } from "./model-picker.ts";
-import { type CompleteRewrite, completeRewrite, type RewriteOutcome, UNSLOP_SYSTEM_PROMPT } from "./model-rewrite.ts";
+import { type CompleteRewrite, completeRewrite, ELI5_SYSTEM_PROMPT, type RewriteOutcome } from "./model-rewrite.ts";
 import { loadEffectivePrompt, PROMPT_FILENAME } from "./prompt.ts";
 import { type PreparedRewriteRequest, prepareManualRewriteRequest, prepareRewriteRequest } from "./rewrite.ts";
 import { buildLegacyCard, buildTabbedCard, cardBackground, type SlyeTab } from "./tabs.ts";
@@ -361,7 +361,7 @@ export default function speakLikeYouEat(pi: ExtensionAPI, options?: { tabs?: boo
 
       const [simple, rewrite] = await Promise.all([
         completeRewrite(prepared.request, signal, complete, simplePrompt),
-        completeRewrite(prepared.request, signal, complete, UNSLOP_SYSTEM_PROMPT),
+        completeRewrite(prepared.request, signal, complete, ELI5_SYSTEM_PROMPT),
       ]);
       if (simple.kind === "cancelled" || rewrite.kind === "cancelled") {
         return { kind: "cancelled" };

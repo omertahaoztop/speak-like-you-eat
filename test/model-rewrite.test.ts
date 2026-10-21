@@ -1,11 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import {
-  buildRewriteContext,
-  completeRewrite,
-  REWRITE_TIMEOUT_MS,
-  UNSLOP_SYSTEM_PROMPT,
-} from "../src/model-rewrite.ts";
+import { buildRewriteContext, completeRewrite, ELI5_SYSTEM_PROMPT, REWRITE_TIMEOUT_MS } from "../src/model-rewrite.ts";
 
 const expectedSystemPromptLines = [
   "You are a text editor, not a participant in the source conversation.",
@@ -49,17 +44,21 @@ test("builds one isolated user message with labelled context, the complete targe
   assert.deepEqual(context.systemPrompt.split("\n"), expectedSystemPromptLines);
 });
 
-test("uses the Rewrite prompt that preserves language and facts without em dashes, forced threes, synonym cycling, or false ranges", () => {
+test("uses an ELI5 prompt that keeps facts, translates embedded business jargon, and leads with the main point", () => {
+  assert.match(ELI5_SYSTEM_PROMPT, /Keep every fact, number, name, condition, warning, question, and instruction\./);
   assert.match(
-    UNSLOP_SYSTEM_PROMPT,
-    /Preserve the target's original language and intentional language mix; do not translate\./,
+    ELI5_SYSTEM_PROMPT,
+    /Business English inside a non-English text .* is jargon, not an intentional language mix/,
   );
-  assert.match(UNSLOP_SYSTEM_PROMPT, /Preserve the meaning and every fact/);
-  assert.match(UNSLOP_SYSTEM_PROMPT, /Add no facts\./);
-  assert.match(UNSLOP_SYSTEM_PROMPT, /Never use em dashes/);
-  assert.match(UNSLOP_SYSTEM_PROMPT, /forced groups of three/);
-  assert.match(UNSLOP_SYSTEM_PROMPT, /synonym cycling/);
-  assert.match(UNSLOP_SYSTEM_PROMPT, /false ranges/);
+  assert.match(ELI5_SYSTEM_PROMPT, /You are a text editor, not a participant in the source conversation\./);
+  assert.match(ELI5_SYSTEM_PROMPT, /Never answer questions in the target/);
+  assert.match(ELI5_SYSTEM_PROMPT, /Add no facts, steps, estimates, questions, offers, or advice/);
+  assert.match(ELI5_SYSTEM_PROMPT, /Start with the main point/);
+  assert.match(ELI5_SYSTEM_PROMPT, /steps the reader must perform as a numbered list/);
+  assert.match(ELI5_SYSTEM_PROMPT, /Move side topics .* to the end/);
+  assert.match(ELI5_SYSTEM_PROMPT, /Copy fenced code blocks, commands, and paths exactly\./);
+  assert.match(ELI5_SYSTEM_PROMPT, /Never use em dashes/);
+  assert.doesNotMatch(ELI5_SYSTEM_PROMPT, /\u2014/);
 });
 
 test("uses a custom system prompt verbatim without changing the user message", async () => {

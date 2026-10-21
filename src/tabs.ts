@@ -97,7 +97,7 @@ function headingParts(theme: Theme, activeTab: SlyeTab): Array<{ text: string; t
 }
 
 function tabLabel(theme: Theme, tab: SlyeTab, activeTab: SlyeTab): string {
-  const label = tab === "rewrite" ? "Rewrite" : "Simple";
+  const label = tab === "rewrite" ? "ELI5" : "Light";
   if (tab === activeTab) {
     return theme.bold(theme.fg("accent", `[ ${label} ]`));
   }

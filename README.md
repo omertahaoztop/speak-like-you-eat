@@ -43,20 +43,20 @@ omp plugin install speak-like-you-eat
 | `/slye on` | Enable automatic rewriting, or choose a model and enable it when no usable model is saved. |
 | `/slye off` | Disable automatic rewriting; manual `/slye` remains available. |
 
-### Rewrite and Simple tabs (Pi)
+### ELI5 and Light tabs (Pi)
 
 On Pi, each card holds two versions of the rewrite, shown as tabs on its heading line:
 
-- **Rewrite** (active by default): a full plain-language rewrite, adapted from the [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) rules.
-- **Simple**: the lighter rewrite SLYE has always made, or your custom prompt's output.
+- **ELI5** (active by default): rewrites the answer so it is easy to follow. It starts with the main point, puts steps in a numbered list, moves side notes to the end, and replaces jargon with plain words, while keeping every fact. Adapted from the [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills.
+- **Light**: the lighter rewrite SLYE has always made, close to the original wording, or your custom prompt's output.
 
-Click a tab in fullscreen mode, or press `ctrl+\` in any mode, to switch. The choice applies to every card and resets when Pi restarts. On Pi each rewrite makes two provider requests, in parallel, so it costs about twice as much as one version. OMP shows only the Simple version, without tabs.
+Click a tab in fullscreen mode, or press `ctrl+\` in any mode, to switch. The choice applies to every card and resets when Pi restarts. On Pi each rewrite makes two provider requests, in parallel, so it costs about twice as much as one version. OMP shows only the Light version, without tabs.
 
 SLYE automatically uses the selected model's lowest supported thinking level. Automatic rewriting requires a normally completed final response with at least 200 non-whitespace prose characters outside fenced code. Manual `/slye` uses the same normal-completion, prose, and no-tool-call requirements, but has no 200-character minimum.
 
 ### Custom system prompt
 
-To replace the built-in Simple prompt with your own `slye-prompt.md`, follow [Customize the SLYE system prompt](backlog/docs/runbooks/doc-6%20-%20Customize-the-SLYE-system-prompt.md).
+To replace the built-in Light prompt with your own `slye-prompt.md`, follow [Customize the SLYE system prompt](backlog/docs/runbooks/doc-6%20-%20Customize-the-SLYE-system-prompt.md).
 
 ### Recommended models
 
@@ -73,7 +73,7 @@ Models that I recommend:
 ## What SLYE guarantees
 
 - The original response stays visible and unchanged. The display-only card never enters LLM context.
-- SLYE's built-in prompts tell the model to preserve the target response's language and intentional language mix rather than translate it. A custom prompt replaces those instructions for the Simple version only.
+- SLYE's built-in Light prompt tells the model to preserve the target response's language and intentional language mix rather than translate it. The ELI5 prompt keeps the response's main language but may reorder it and change its Markdown structure. A custom prompt replaces those instructions for the Light version only. The ELI5 prompt replaces business jargon in other languages, such as English buzzwords in an Italian answer, with plain words in the answer's language.
 - Each target has at most one persistent companion card. Secondary provider requests (two on Pi, one on OMP) have their own cost and latency and happen only for an automatically eligible response or an eligible, not-yet-completed manual target.
 - Escape cancels a rewrite. Cancellation, timeout, and provider failures leave the original unchanged and permit a manual retry. Storage failures have [host-specific retry limitations](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md#interaction-and-failures).
 - SLYE sends an isolated payload to the selected model through the host's model registry. Apart from its explicit configuration and optional `slye-prompt.md`, it does not load project files, project instructions, skills, prompt templates, tools, or the full session history. Other extensions and provider-side processing are outside SLYE's control.

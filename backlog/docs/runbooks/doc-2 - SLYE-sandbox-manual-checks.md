@@ -3,7 +3,7 @@ id: doc-2
 title: SLYE sandbox manual checks
 type: guide
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-20 21:18'
+updated_date: '2026-10-21 15:18'
 ---
 # SLYE sandbox manual checks
 
@@ -107,7 +107,7 @@ A terminal check cannot observe SLYE's provider payload. Automated evidence that
 
 ### Slice 4 / TASK-11 — manual-first and automatic rewrite checks (provider calls)
 
-Do not run this section now. Every numbered step marked **Provider calls** requires explicit operator approval immediately before it runs. A submitted prompt makes one primary provider call; an actual SLYE rewrite makes two secondary provider calls on Pi (Rewrite and Simple). Where a step below says "one secondary", count two on Pi, and expect the tabbed heading `🤌 Speak like you eat   [ Rewrite ]  Simple` where a step names the `🤌 Speak like you eat:` card. Run the preceding picker and configuration checks in sessions separate from the provider-call steps; those checks make no provider calls.
+Do not run this section now. Every numbered step marked **Provider calls** requires explicit operator approval immediately before it runs. A submitted prompt makes one primary provider call; an actual SLYE rewrite makes two secondary provider calls on Pi (ELI5 and Light). Where a step below says "one secondary", count two on Pi, and expect the tabbed heading `🤌 Speak like you eat   [ ELI5 ]  Light` where a step names the `🤌 Speak like you eat:` card. Run the preceding picker and configuration checks in sessions separate from the provider-call steps; those checks make no provider calls.
 
 Use a disposable authenticated profile with no existing SLYE configuration for the manual-first check, or record that the first-time case cannot be isolated without changing a protected global configuration. Start Pi from the sandbox only after approval:
 
@@ -124,17 +124,17 @@ pi --approve
 6. **Provider calls: one primary, one cancelled secondary, then one retry secondary.** Submit a new eligible answer while automatic rewriting is off. Run `/slye`, press Escape while `Rewriting AI-speak…` is visible, and confirm there is no warning or card. Run `/slye` again and approve the retry; confirm one card appears. A cancelled secondary request may still consume usage.
 7. Exit and resume the session. **Provider calls: none.** Confirm every existing companion card still renders, legacy display-only cards are not duplicated, and resume alone adds no card. For a target that already has a card, run `/slye` only if separately approved and confirm the completed-target message rather than a new call or card.
 
-### TASK-21 — Rewrite and Simple tabs on Pi (provider calls)
+### TASK-21 — ELI5 and Light tabs on Pi (provider calls)
 
 Before any release that touches `src/`, run `npm run check:omp-load` with OMP installed. It makes no model call and fails if OMP can no longer load SLYE, which Node tests cannot detect.
 
 Every rewrite here makes **two** secondary provider calls. Obtain explicit operator approval before each one.
 
-1. **Provider calls: one primary, then two secondary after `/slye`.** In fullscreen mode, obtain a completed answer and run `/slye`. Confirm one card whose heading reads `🤌 Speak like you eat   [ Rewrite ]  Simple` and whose body is the Rewrite text.
-2. **Provider calls: none.** Click `Simple` and confirm the body and highlight switch; click `Rewrite` to switch back. Press `ctrl+\` and confirm it switches too, and that every tabbed card in the transcript shows the same tab.
-3. **Provider calls: none.** Restart Pi in regular mode (`--tui-mode regular`) and resume the session. Confirm `ctrl+\` switches tabs, that the tab starts at Rewrite again, and that cards created before TASK-21 still render without tabs.
+1. **Provider calls: one primary, then two secondary after `/slye`.** In fullscreen mode, obtain a completed answer and run `/slye`. Confirm one card whose heading reads `🤌 Speak like you eat   [ ELI5 ]  Light` and whose body is the ELI5 text.
+2. **Provider calls: none.** Click `Light` and confirm the body and highlight switch; click `ELI5` to switch back. Press `ctrl+\` and confirm it switches too, and that every tabbed card in the transcript shows the same tab.
+3. **Provider calls: none.** Restart Pi in regular mode (`--tui-mode regular`) and resume the session. Confirm `ctrl+\` switches tabs, that the tab starts at ELI5 again, and that cards created before TASK-21 still render without tabs.
 4. **Provider calls: none.** Switch `/settings` → Theme to light and back to dark. Confirm the card background stays readable and is a muted tint of the theme's custom-message color, not the saturated default violet.
-5. **Rewrite quality.** On 4-5 real answers, including ones where Simple comes back nearly identical to the original, compare the two tabs. Record whether Rewrite drops facts, adds facts, changes the language, or keeps em dashes.
+5. **Rewrite quality.** On 4-5 real answers, including ones where Light comes back nearly identical to the original, compare the two tabs. Record whether ELI5 drops or adds facts, changes the main language, keeps business jargon, or fails to lead with the main point.
 
 ### Slice 5 — final package verification
 
