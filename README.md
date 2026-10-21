@@ -47,7 +47,7 @@ omp plugin install speak-like-you-eat
 
 On Pi, each card holds two versions of the rewrite, shown as tabs on its heading line:
 
-- **ELI5** (active by default): rewrites the answer so it is easy to follow. It starts with the main point, puts steps in a numbered list, moves side notes to the end, and replaces jargon with plain words, while keeping every fact. Adapted from the [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills.
+- **ELI5** (active by default): rebuilds the answer for a reader who wants the point fast. It starts with the conclusion and what you need to do, then lists what was done, the steps, the key facts, and the open decisions, in plain words and at about half the length, while keeping every fact. Adapted from the [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills.
 - **Light**: the lighter rewrite SLYE has always made, close to the original wording, or your custom prompt's output.
 
 Click a tab in fullscreen mode, or press `ctrl+\` in any mode, to switch. The choice applies to every card and resets when Pi restarts. On Pi each rewrite makes two provider requests, in parallel, so it costs about twice as much as one version. OMP shows only the Light version, without tabs.
@@ -60,15 +60,13 @@ To replace the built-in Light prompt with your own `slye-prompt.md`, follow [Cus
 
 ### Recommended models
 
-I ran a small, human-scored benchmark (me) to see how different cheap AI models would handle the "translation" part.
+Use cheap-ish, fast models with low or no reasoning; SLYE sets reasoning for you. Both Pi tabs use the same model.
 
-But long story short, use cheap-ish, fast models with low/no reasoning (SLYE already sets reasoning for you).
+- **Claude Haiku 5.5** - best ELI5 results in my trials: it restructures well, keeps the facts, and roughly halves long answers
+- **GPT-6 Luna** - good ELI5 and the shortest output, not the fastest
+- **DeepSeek V4.1 Flash** - the fastest; good Light rewrites and a correct ELI5 structure, but it shortens long answers less
 
-Models that I recommend:
-
-- **Terra** - best overall in this benchmark but not the fastest
-- **DeepSeek V4 Flash** - fast, good accuracy
-- **GPT-OSS 120B** - cheapest of the three with good overall results, but more sensitive to prompt wording in this small benchmark
+Avoid models that write their reasoning into the answer (for example GLM 5.3 Flash), and GPT-OSS 20B, which translated Italian answers into English and invented steps in ELI5. These ELI5 notes come from a small manual trial on six real answers; the scored [benchmark](backlog/docs/specs/doc-4%20-%20SLYE-benchmark-results.md) covers only the Light prompt.
 
 ## What SLYE guarantees
 

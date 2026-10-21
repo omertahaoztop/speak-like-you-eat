@@ -3,7 +3,7 @@ id: doc-1
 title: SLYE MVP specification
 type: specification
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-21 15:27'
+updated_date: '2026-10-21 17:07'
 ---
 # SLYE MVP specification
 
@@ -80,12 +80,13 @@ The following instructions describe the built-in Light prompt. A custom prompt r
 
 ### Built-in ELI5 prompt (Pi)
 
-The ELI5 prompt is adapted from the MIT-licensed [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills; the attribution is kept in the source, not in model output. A custom prompt does not replace it. Its goal is a text a tired, easily distracted reader understands on the first read and can act on.
+The ELI5 prompt is adapted from the MIT-licensed [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills; the attribution is kept in the source, not in model output. A custom prompt does not replace it. Its goal is a text a reader with ADHD can read in one pass and act on. It tells the model to understand the target and write a new text from scratch instead of editing it sentence by sentence.
 
-- It keeps the Light prompt's editor role, source-text isolation, no-answering, and output-only rules. It keeps every fact, number, name, condition, warning, question, and instruction, and adds no facts, steps, estimates, questions, offers, or advice. Fenced code, commands, and paths are copied exactly.
-- It writes in the target's main language. Business English inside a non-English target is treated as jargon, not as an intentional language mix, and is replaced with plain words in the main language, as are buzzwords, idioms, and metaphors. Names, code identifiers, URLs, numbers, and technical terms without a common plain equivalent (such as KPI, API, PR, CI) stay.
-- It may reorder the target: main point first, then background; one line of thought; steps as a numbered list in execution order; side topics in one short sentence at the end; the reader's next action last when the target contains one. Lists stay short by grouping, without dropping items, and headings appear only for several separate topics. Markdown structure may therefore change.
-- It cuts empty openers, hype, recaps, pleasantries, sycophancy, filler, repetition, and hedges that add nothing, keeping hedges that carry real uncertainty. It uses short active sentences and common words, states affirmative facts instead of "not X but Y", and never uses em dashes.
+- It keeps the Light prompt's editor role, source-text isolation, no-answering, and output-only rules. Questions the target asks the reader stay questions. Prior context is used to judge what matters to the reader.
+- It rebuilds the text in a fixed order, skipping empty parts: a bottom line with the target's conclusion and what it needs from the reader; what the speaker already did, with concrete values; the steps the target tells the reader to do, numbered; at most five key facts; open questions and decisions left to the reader; side notes. Every part after the bottom line starts with a short bold label in the target's language. Suggestions and options stay decisions; they never become steps.
+- It ignores the target's paragraph order, headings, and tables, so Markdown structure changes. It keeps every conclusion, number, name, date, command, path, URL, warning, condition, question, decision, and completed action, and adds no advice, consequences, risks, benefits, or questions. It drops narration of how something was found, redundant evidence, and source-code quotes the reader did not ask for, aiming for about half the target's length.
+- It writes in the target's main language. Business English inside a non-English target is treated as jargon and replaced with plain words in that language, as are buzzwords, idioms, and metaphors. Names, code identifiers, commands, paths, URLs, and technical terms without a common plain equivalent stay; fenced code, commands, and paths are copied exactly.
+- It uses short sentences and common words, no preamble, recap, pleasantries, or filler, no em dashes, and bold only for the few words the reader must not miss.
 
 ## Benchmark guidance
 
@@ -94,6 +95,7 @@ See the complete reviewed [benchmark results](doc-4%20-%20SLYE-benchmark-results
 - Quality-first recommendation: `openai-codex/gpt-5.6-terra` with reasoning off. Low-latency recommendation: `ollama-cloud/deepseek-v4-flash:0731` with reasoning off. Across both prompt phases, measured DeepSeek latency was about one-third of Terra latency.
 - `ollama-cloud/gpt-oss:20b` was tested at low and high thinking across all six fixtures. Low was fast but lower quality; high improved quality only slightly while increasing mean latency from about 1.7 seconds to about 17.2 seconds, so neither configuration is recommended.
 - `ollama-cloud/gpt-oss:120b` low was fast and competitive under the original prompt but regressed slightly under the promoted prompt. Higher thinking across the matrix did not reliably improve rewrite quality.
+- ELI5 prompt trials (2026-10-21, six real long answers, not a scored benchmark): `anthropic/claude-haiku-5-5`, `openai/gpt-6-luna`, and `ollama-cloud/deepseek-v4.1-flash` followed the ELI5 structure. Haiku and Luna also cut length substantially; DeepSeek was the fastest but shortened long answers less. `ollama-cloud/gpt-oss:20b` translated Italian answers into English and invented steps. `ollama-cloud/gpt-oss:120b` invented steps before the prompt forbade it. `ollama-cloud/glm-5.3-flash` wrote its reasoning into the card, and `ollama-cloud/minimax-m3.1-flash` often exceeded two minutes. Both Pi tabs use the same configured model.
 - SLYE automatically uses a model's lowest supported thinking level and provides no thinking control. Thinking labels here are explicit tested benchmark configurations, not user-selectable SLYE settings. The corpus is deliberately small, so these are practical recommendations rather than universal provider guarantees.
 
 ## Interaction and failures

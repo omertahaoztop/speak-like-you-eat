@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-20 15:56'
-updated_date: '2026-10-21 15:27'
+updated_date: '2026-10-21 17:07'
 labels:
   - feature
 dependencies:
@@ -99,4 +99,6 @@ Implementation and three review rounds complete (2026-10-20). Verified: npm run 
 Operator decision 2026-10-20: support only the current Pi release. Removed hostSupportsTabs and check:old-pi; tabs are on unless the caller passes tabs:false (OMP). The namespace import of pi-tui stays because OMP lacks MouseRegion/OKHSL helpers and a named import would stop OMP from loading SLYE (check:omp-load still passes).
 
 Live use 2026-10-21: the unslop-based Rewrite prompt kept Italian corporate jargon (worse than Simple). User redefined the goal as an ADHD-friendly, reorganized rewrite (i-have-adhd, MIT, Ayoub Ghriss). New ELI5 prompt trialled on 6 targets (3 real corporate cards, a technical Italian text, an English slop paragraph, a verbose AI answer) with deepseek-v4.1-flash, claude-opus-5-5, gpt-6-luna: jargon translated, main point first, steps numbered, code/paths intact; gpt-6-luna dropped one fact on the long answer; deepseek reorders less. Tabs renamed ELI5/Light (user choice); stored fields unchanged (display = Light, rewrite = ELI5).
+
+Prompt trials 2026-10-21 (round 2): the first ELI5 prompt still mirrored the target layout in live use. Iterated drafts on six real long answers from local sessions (with the user question as context) across deepseek-v4.1-flash, claude-opus-5-5, gpt-6-luna, gpt-oss:120b, then claude-haiku-5-5, glm-5.3-flash, minimax-m3.1-flash, gpt-oss:20b. Final prompt: write a new text from scratch in a fixed order (bottom line, done, steps, key facts, open decisions, side notes), labels in the target language, suggestions never become steps, completed actions never dropped, about half the length. Results: haiku-5-5 best, gpt-6-luna good, deepseek fastest but shortens less; gpt-oss:20b translated to English and invented steps; glm-5.3-flash leaks reasoning into output; minimax-m3.1-flash often over 2 minutes. README recommended models updated accordingly. Operator decision: one model for both tabs; per-tab models deferred.
 <!-- SECTION:NOTES:END -->

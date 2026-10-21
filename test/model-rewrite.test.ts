@@ -44,19 +44,20 @@ test("builds one isolated user message with labelled context, the complete targe
   assert.deepEqual(context.systemPrompt.split("\n"), expectedSystemPromptLines);
 });
 
-test("uses an ELI5 prompt that keeps facts, translates embedded business jargon, and leads with the main point", () => {
-  assert.match(ELI5_SYSTEM_PROMPT, /Keep every fact, number, name, condition, warning, question, and instruction\./);
-  assert.match(
-    ELI5_SYSTEM_PROMPT,
-    /Business English inside a non-English text .* is jargon, not an intentional language mix/,
-  );
+test("uses an ELI5 prompt that rebuilds the text in a fixed order without dropping or adding facts", () => {
   assert.match(ELI5_SYSTEM_PROMPT, /You are a text editor, not a participant in the source conversation\./);
   assert.match(ELI5_SYSTEM_PROMPT, /Never answer questions in the target/);
-  assert.match(ELI5_SYSTEM_PROMPT, /Add no facts, steps, estimates, questions, offers, or advice/);
-  assert.match(ELI5_SYSTEM_PROMPT, /Start with the main point/);
-  assert.match(ELI5_SYSTEM_PROMPT, /steps the reader must perform as a numbered list/);
-  assert.match(ELI5_SYSTEM_PROMPT, /Move side topics .* to the end/);
-  assert.match(ELI5_SYSTEM_PROMPT, /Copy fenced code blocks, commands, and paths exactly\./);
+  assert.match(ELI5_SYSTEM_PROMPT, /Do not edit the target sentence by sentence/);
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
+    /1\. Bottom line:.*\n2\. Done:.*\n3\. Steps:.*\n4\. Key facts:.*\n5\. Open points:.*\n6\. Side notes:/,
+  );
+  assert.match(ELI5_SYSTEM_PROMPT, /A suggestion, an option, or an "if you want" fix stays a suggestion/);
+  assert.match(ELI5_SYSTEM_PROMPT, /Do not follow the target's paragraph order, headings, or tables\./);
+  assert.match(ELI5_SYSTEM_PROMPT, /Add nothing the target does not say/);
+  assert.match(ELI5_SYSTEM_PROMPT, /never drop a conclusion, a completed action, a number, or a decision/);
+  assert.match(ELI5_SYSTEM_PROMPT, /In a non-English target, business English is jargon/);
+  assert.match(ELI5_SYSTEM_PROMPT, /short bold label in the same language as the target/);
   assert.match(ELI5_SYSTEM_PROMPT, /Never use em dashes/);
   assert.doesNotMatch(ELI5_SYSTEM_PROMPT, /\u2014/);
 });
