@@ -35,6 +35,7 @@ const PACKED_FILES = [
   "src/omp.ts",
   "src/prompt.ts",
   "src/rewrite.ts",
+  "src/tabs.ts",
 ];
 
 const STABLE_SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
@@ -60,7 +61,7 @@ type PackageLock = {
 
 const runCommand = promisify(exec);
 
-test("the package manifest declares public release metadata, its host extensions, README-linked governed documents, and the 15-file public allowlist", async () => {
+test("the package manifest declares public release metadata, its host extensions, README-linked governed documents, and the 16-file public allowlist", async () => {
   const packageUrl = new URL("../package.json", import.meta.url);
   const packageJson = JSON.parse(await readFile(packageUrl, "utf8")) as PackageManifest;
   const packageLockUrl = new URL("../package-lock.json", import.meta.url);

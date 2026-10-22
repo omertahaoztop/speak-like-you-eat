@@ -12,8 +12,10 @@ import {
   initTheme,
   type SessionEntry,
 } from "@earendil-works/pi-coding-agent";
+import { type Color, colorToOkhsl, okhslColor, visibleWidth } from "@earendil-works/pi-tui";
 import { writeConfigAtomically } from "../src/config.ts";
 import speakLikeYouEat from "../src/index.ts";
+import { ELI5_SYSTEM_PROMPT } from "../src/model-rewrite.ts";
 import { PROMPT_FILENAME } from "../src/prompt.ts";
 
 initTheme("dark", false);
@@ -24,6 +26,7 @@ type Notification = { message: string; type: "info" | "warning" | "error" | unde
 type AppendedEntry = { customType: string; data: unknown };
 type Completion = (model: unknown, context: unknown, options: { signal: AbortSignal }) => Promise<unknown>;
 type RegisteredCommand = { handler(args: string, ctx: ExtensionCommandContext): Promise<void> };
+type RegisteredShortcut = { handler(ctx: ExtensionContext): void };
 type CustomComponent = { handleInput?: (data: string) => void };
 
 function createExtension(options: { appendThrows?: boolean | number } = {}): {
@@ -31,11 +34,13 @@ function createExtension(options: { appendThrows?: boolean | number } = {}): {
   endAgent: (event: AgentEndEvent, ctx: ExtensionContext) => Promise<void>;
   appendedEntries: AppendedEntry[];
   renderer: EntryRenderer | undefined;
+  shortcut: RegisteredShortcut | undefined;
   sendMessageCalls: number;
 } {
   let agentEndHandler: AgentEndHandler | undefined;
   let command: RegisteredCommand | undefined;
   let renderer: EntryRenderer | undefined;
+  let shortcut: RegisteredShortcut | undefined;
   const appendedEntries: AppendedEntry[] = [];
   let appendFailures =
     typeof options.appendThrows === "number" ? options.appendThrows : options.appendThrows ? Infinity : 0;
@@ -51,6 +56,9 @@ function createExtension(options: { appendThrows?: boolean | number } = {}): {
     },
     registerEntryRenderer(_type: string, registeredRenderer: EntryRenderer) {
       renderer = registeredRenderer;
+    },
+    registerShortcut(_key: string, registeredShortcut: RegisteredShortcut) {
+      shortcut = registeredShortcut;
     },
     appendEntry(customType: string, data: unknown) {
       if (appendFailures > 0) {
@@ -74,6 +82,7 @@ function createExtension(options: { appendThrows?: boolean | number } = {}): {
     endAgent: agentEndHandler,
     appendedEntries,
     renderer,
+    shortcut,
     get sendMessageCalls() {
       return sendMessageCalls;
     },
@@ -105,10 +114,12 @@ function createContext(options: {
   findCalls: number;
   waitForIdleCalls: number;
   selectedTitles: string[];
+  statusUpdates: Array<{ key: string; text: string | undefined }>;
 } {
   const notifications: Notification[] = [];
   const workingMessages: Array<string | undefined> = [];
   const selectedTitles: string[] = [];
+  const statusUpdates: Array<{ key: string; text: string | undefined }> = [];
   const customInputBatches = [...(options.customInputBatches ?? [])];
   const selectAnswers = [...(options.selectAnswers ?? [])];
   let completionCalls = 0;
@@ -143,6 +154,9 @@ function createContext(options: {
     ui: {
       notify(message: string, type?: Notification["type"]) {
         notifications.push({ message, type });
+      },
+      setStatus(key: string, status: string | undefined) {
+        statusUpdates.push({ key, text: status });
       },
       setWorkingMessage(message?: string) {
         workingMessages.push(message);
@@ -249,6 +263,7 @@ function createContext(options: {
     notifications,
     workingMessages,
     selectedTitles,
+    statusUpdates,
     get completionCalls() {
       return completionCalls;
     },
@@ -261,7 +276,7 @@ function createContext(options: {
   };
 }
 
-test("calls the configured authenticated model once with an isolated exact rewrite payload", async (t) => {
+test("calls the configured authenticated model twice with an isolated exact rewrite payload", async (t) => {
   const directory = await setupConfiguredDirectory(t, true);
   const firstTargetBlock = "first target block ".repeat(12);
   const secondTargetBlock = "second target block ".repeat(12);
@@ -274,7 +289,12 @@ test("calls the configured authenticated model once with an isolated exact rewri
     cwd: directory,
     branch,
     async complete(_model, request, options) {
-      receivedContext = request as typeof receivedContext;
+      const context = request as typeof receivedContext;
+      if (context?.systemPrompt === ELI5_SYSTEM_PROMPT) {
+        return response("stop", [text("Prima parte."), text("Seconda parte.")]);
+      }
+
+      receivedContext = context;
       receivedOptions = options as typeof receivedOptions;
       return response("stop", [text("Prima parte."), text("Seconda parte.")]);
     },
@@ -286,10 +306,11 @@ test("calls the configured authenticated model once with an isolated exact rewri
   assert.equal(extension.appendedEntries[0]?.customType, "slye.rewrite");
   assert.deepEqual(extension.appendedEntries[0]?.data, {
     display: "Prima parte.\n\nSeconda parte.",
+    rewrite: "Prima parte.\n\nSeconda parte.",
     targetEntryId: "target",
   });
   assert.equal(extension.sendMessageCalls, 0);
-  assert.equal(testContext.completionCalls, 1);
+  assert.equal(testContext.completionCalls, 2);
   assert.equal(testContext.findCalls, 1);
   assert.deepEqual(testContext.notifications, []);
   assert.deepEqual(testContext.workingMessages, ["Rewriting AI-speak…", undefined]);
@@ -324,6 +345,36 @@ test("calls the configured authenticated model once with an isolated exact rewri
   assert.notEqual(receivedOptions?.signal, testContext.context.signal);
 });
 
+test("saves both rewrite texts after two model calls", async (t) => {
+  const directory = await setupConfiguredDirectory(t, true);
+  const target = longAssistant();
+  const branch = [entry("target", target)];
+  const prompts: string[] = [];
+  const extension = createExtension();
+  const testContext = createContext({
+    cwd: directory,
+    branch,
+    async complete(_model, request) {
+      const prompt = (request as { systemPrompt: string }).systemPrompt;
+      prompts.push(prompt);
+      return response("stop", [text(prompt === ELI5_SYSTEM_PROMPT ? "Rewrite response." : "Simple response.")]);
+    },
+  });
+
+  await extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, testContext.context);
+
+  assert.equal(testContext.completionCalls, 2);
+  assert.equal(prompts.length, 2);
+  assert.ok(prompts.some((prompt) => prompt.includes("Rewrite only the target in clear, everyday language.")));
+  assert.ok(prompts.some((prompt) => prompt === ELI5_SYSTEM_PROMPT));
+  assert.deepEqual(extension.appendedEntries, [
+    {
+      customType: "slye.rewrite",
+      data: { display: "Simple response.", rewrite: "Rewrite response.", targetEntryId: "target" },
+    },
+  ]);
+});
+
 test("reloads a global custom prompt for automatic rewrites of different targets", async (t) => {
   const directory = await setupConfiguredDirectory(t, true);
   const globalPromptPath = join(process.env.PI_CODING_AGENT_DIR ?? "", PROMPT_FILENAME);
@@ -347,10 +398,19 @@ test("reloads a global custom prompt for automatic rewrites of different targets
   branch.push(entry("second-target", secondTarget));
   await extension.endAgent({ type: "agent_end", messages: [secondTarget] } as AgentEndEvent, testContext.context);
 
-  assert.deepEqual(prompts, ["first custom prompt", "second custom prompt"]);
+  assert.equal(prompts.length, 4);
+  assert.ok(prompts.includes("first custom prompt"));
+  assert.ok(prompts.includes("second custom prompt"));
+  assert.equal(prompts.filter((prompt) => prompt === ELI5_SYSTEM_PROMPT).length, 2);
   assert.deepEqual(extension.appendedEntries, [
-    { customType: "slye.rewrite", data: { display: "Plain response.", targetEntryId: "first-target" } },
-    { customType: "slye.rewrite", data: { display: "Plain response.", targetEntryId: "second-target" } },
+    {
+      customType: "slye.rewrite",
+      data: { display: "Plain response.", rewrite: "Plain response.", targetEntryId: "first-target" },
+    },
+    {
+      customType: "slye.rewrite",
+      data: { display: "Plain response.", rewrite: "Plain response.", targetEntryId: "second-target" },
+    },
   ]);
 });
 
@@ -360,12 +420,12 @@ test("uses a custom global prompt for a manual rewrite with automatic rewrites d
   const target = longAssistant([text("Short response.")]);
   const branch = [entry("target", target)];
   const extension = createExtension();
-  let prompt: string | undefined;
+  const prompts: string[] = [];
   const testContext = createContext({
     cwd: directory,
     branch,
     async complete(_model, request) {
-      prompt = (request as { systemPrompt: string }).systemPrompt;
+      prompts.push((request as { systemPrompt: string }).systemPrompt);
       return response("stop", [text("Plain response.")]);
     },
   });
@@ -373,8 +433,87 @@ test("uses a custom global prompt for a manual rewrite with automatic rewrites d
   await writeFile(globalPromptPath, "manual custom prompt", "utf8");
   await extension.command.handler("", testContext.context);
 
-  assert.equal(prompt, "manual custom prompt");
-  assert.equal(testContext.completionCalls, 1);
+  assert.equal(prompts.length, 2);
+  assert.ok(prompts.includes("manual custom prompt"));
+  assert.ok(prompts.some((prompt) => prompt === ELI5_SYSTEM_PROMPT));
+  assert.equal(testContext.completionCalls, 2);
+});
+
+test("uses a custom prompt only for the Light call", async (t) => {
+  const directory = await setupConfiguredDirectory(t, true);
+  const globalPromptPath = join(process.env.PI_CODING_AGENT_DIR ?? "", PROMPT_FILENAME);
+  const target = longAssistant();
+  const branch = [entry("target", target)];
+  const prompts: string[] = [];
+  const extension = createExtension();
+  const testContext = createContext({
+    cwd: directory,
+    branch,
+    async complete(_model, request) {
+      prompts.push((request as { systemPrompt: string }).systemPrompt);
+      return response("stop", [text("response")]);
+    },
+  });
+
+  await writeFile(globalPromptPath, "custom simple prompt", "utf8");
+  await extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, testContext.context);
+
+  assert.ok(prompts.includes("custom simple prompt"));
+  assert.ok(prompts.some((prompt) => prompt === ELI5_SYSTEM_PROMPT));
+});
+
+test("warns and remains retryable when ELI5 fails", async (t) => {
+  const directory = await setupConfiguredDirectory(t, true);
+  const target = longAssistant();
+  const branch = [entry("target", target)];
+  const extension = createExtension();
+  const failed = createContext({
+    cwd: directory,
+    branch,
+    async complete(_model, request) {
+      if ((request as { systemPrompt: string }).systemPrompt === ELI5_SYSTEM_PROMPT) {
+        throw new Error("Rewrite failed");
+      }
+      return response("stop", [text("Simple response.")]);
+    },
+  });
+
+  await extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, failed.context);
+
+  assert.deepEqual(extension.appendedEntries, []);
+  assert.deepEqual(failed.notifications, [{ message: "SLYE could not create a rewrite.", type: "warning" }]);
+
+  const retried = createContext({ cwd: directory, branch });
+  await extension.command.handler("", retried.context);
+  assert.equal(retried.completionCalls, 2);
+  assert.equal(extension.appendedEntries.length, 1);
+});
+
+test("warns and remains retryable when Light fails but ELI5 succeeds", async (t) => {
+  const directory = await setupConfiguredDirectory(t, true);
+  const target = longAssistant();
+  const branch = [entry("target", target)];
+  const extension = createExtension();
+  const failed = createContext({
+    cwd: directory,
+    branch,
+    async complete(_model, request) {
+      if ((request as { systemPrompt: string }).systemPrompt === ELI5_SYSTEM_PROMPT) {
+        return response("stop", [text("Rewrite response.")]);
+      }
+      throw new Error("Simple failed");
+    },
+  });
+
+  await extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, failed.context);
+
+  assert.deepEqual(extension.appendedEntries, []);
+  assert.deepEqual(failed.notifications, [{ message: "SLYE could not create a rewrite.", type: "warning" }]);
+
+  const retried = createContext({ cwd: directory, branch });
+  await extension.command.handler("", retried.context);
+  assert.equal(retried.completionCalls, 2);
+  assert.equal(extension.appendedEntries.length, 1);
 });
 
 test("blocks an invalid trusted project prompt, warns once, and permits a repaired manual retry", async (t) => {
@@ -403,9 +542,12 @@ test("blocks an invalid trusted project prompt, warns once, and permits a repair
   await writePromptFile(projectPromptPath, "repaired project prompt");
   await extension.command.handler("", testContext.context);
 
-  assert.equal(testContext.completionCalls, 1);
+  assert.equal(testContext.completionCalls, 2);
   assert.deepEqual(extension.appendedEntries, [
-    { customType: "slye.rewrite", data: { display: "Plain response.", targetEntryId: "target" } },
+    {
+      customType: "slye.rewrite",
+      data: { display: "Plain response.", rewrite: "Plain response.", targetEntryId: "target" },
+    },
   ]);
 });
 
@@ -416,12 +558,12 @@ test("uses the global prompt when an untrusted project has an invalid prompt", a
   const target = longAssistant();
   const branch = [entry("target", target)];
   const extension = createExtension();
-  let prompt: string | undefined;
+  const prompts: string[] = [];
   const testContext = createContext({
     cwd: directory,
     branch,
     async complete(_model, request) {
-      prompt = (request as { systemPrompt: string }).systemPrompt;
+      prompts.push((request as { systemPrompt: string }).systemPrompt);
       return response("stop", [text("Plain response.")]);
     },
   });
@@ -430,8 +572,10 @@ test("uses the global prompt when an untrusted project has an invalid prompt", a
   await writePromptFile(projectPromptPath, " \n");
   await extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, testContext.context);
 
-  assert.equal(prompt, "global prompt");
-  assert.equal(testContext.completionCalls, 1);
+  assert.equal(prompts.length, 2);
+  assert.ok(prompts.includes("global prompt"));
+  assert.ok(prompts.some((prompt) => prompt === ELI5_SYSTEM_PROMPT));
+  assert.equal(testContext.completionCalls, 2);
   assert.deepEqual(testContext.notifications, []);
 });
 
@@ -522,16 +666,17 @@ test("processes a duplicate target event only once", async (t) => {
   await extension.endAgent(event, context);
   await extension.endAgent(event, context);
 
-  assert.equal(calls, 1);
+  assert.equal(calls, 2);
   assert.equal(extension.appendedEntries.length, 1);
 });
 
-test("cancels a running secondary request silently and restores the working message", async (t) => {
+test("cancels one tab rewrite while the other succeeds without a warning", async (t) => {
   const directory = await setupConfiguredDirectory(t, true);
   const target = longAssistant();
   const branch = [entry("user", user("please explain")), entry("target", target)];
   const userController = new AbortController();
-  let requestSignal: AbortSignal | undefined;
+  const requestSignals: AbortSignal[] = [];
+  let calls = 0;
   let resolveStarted: (() => void) | undefined;
   const started = new Promise<void>((resolve) => {
     resolveStarted = resolve;
@@ -541,27 +686,81 @@ test("cancels a running secondary request silently and restores the working mess
     cwd: directory,
     branch,
     signal: userController.signal,
-    complete(_model, _request, options) {
-      requestSignal = options.signal;
-      resolveStarted?.();
+    complete(_model, request, options) {
+      calls += 1;
+      requestSignals.push(options.signal);
+      if ((request as { systemPrompt: string }).systemPrompt === ELI5_SYSTEM_PROMPT) {
+        resolveStarted?.();
+        return Promise.resolve(response("stop", [text("Rewrite response.")]));
+      }
       return new Promise(() => undefined);
     },
   });
 
   const completed = extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, context);
   await started;
+  // Let both parallel requests register their cancellation listeners before aborting.
+  await new Promise<void>((resolve) => setImmediate(resolve));
   userController.abort();
   await completed;
 
-  assert.equal(requestSignal?.aborted, true);
+  assert.equal(calls, 2);
+  assert.equal(requestSignals.filter((signal) => signal.aborted).length, 1);
   assert.deepEqual(extension.appendedEntries, []);
   assert.deepEqual(notifications, []);
   assert.deepEqual(workingMessages, ["Rewriting AI-speak…", undefined]);
 
   const retried = createContext({ cwd: directory, branch });
   await extension.command.handler("", retried.context);
-  assert.equal(retried.completionCalls, 1);
+  assert.equal(retried.completionCalls, 2);
   assert.equal(extension.appendedEntries.length, 1);
+});
+
+test("cancellation takes precedence when Light fails and ELI5 remains pending", async (t) => {
+  const directory = await setupConfiguredDirectory(t, true);
+  const target = longAssistant();
+  const branch = [entry("user", user("please explain")), entry("target", target)];
+  const userController = new AbortController();
+  const requestSignals: AbortSignal[] = [];
+  let calls = 0;
+  let resolveStarted: (() => void) | undefined;
+  const started = new Promise<void>((resolve) => {
+    resolveStarted = resolve;
+  });
+  const extension = createExtension();
+  const { context, notifications, workingMessages } = createContext({
+    cwd: directory,
+    branch,
+    signal: userController.signal,
+    complete(_model, request, options) {
+      calls += 1;
+      requestSignals.push(options.signal);
+      if ((request as { systemPrompt: string }).systemPrompt === ELI5_SYSTEM_PROMPT) {
+        resolveStarted?.();
+        return new Promise(() => undefined);
+      }
+      return Promise.reject(new Error("Simple failed"));
+    },
+  });
+
+  const completed = extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, context);
+  await started;
+  // Let the Light failure settle before cancellation aborts only the pending ELI5 request.
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  userController.abort();
+  await completed;
+
+  assert.equal(calls, 2);
+  assert.equal(requestSignals.filter((signal) => signal.aborted).length, 1);
+  assert.deepEqual(extension.appendedEntries, []);
+  assert.deepEqual(notifications, []);
+  assert.deepEqual(workingMessages, ["Rewriting AI-speak…", undefined]);
+
+  const retried = createContext({ cwd: directory, branch });
+  await extension.command.handler("", retried.context);
+  assert.equal(retried.completionCalls, 2);
+  assert.equal(extension.appendedEntries.length, 1);
+  assert.deepEqual(retried.notifications, []);
 });
 
 test("provider, non-stop, and empty failures leave the original alone and warn once", async (t) => {
@@ -602,7 +801,7 @@ test("provider, non-stop, and empty failures leave the original alone and warn o
   assert.deepEqual(emptyFailure.notifications, []);
 });
 
-test("an append failure leaves the original alone and warns", async (t) => {
+test("an append failure on the tabs path leaves the original alone and warns", async (t) => {
   const directory = await setupConfiguredDirectory(t, true);
   const target = longAssistant();
   const extension = createExtension({ appendThrows: true });
@@ -669,7 +868,7 @@ test("automatic working-message failures release the target for a manual retry w
   const retried = createContext({ cwd: directory, branch });
   await extension.command.handler("", retried.context);
 
-  assert.equal(retried.completionCalls, 1);
+  assert.equal(retried.completionCalls, 2);
   assert.equal(extension.appendedEntries.length, 1);
 });
 
@@ -688,7 +887,7 @@ test("manual custom UI failures release the target for a later retry", async (t)
   const retried = createContext({ cwd: directory, branch });
   await extension.command.handler("", retried.context);
 
-  assert.equal(retried.completionCalls, 1);
+  assert.equal(retried.completionCalls, 2);
   assert.equal(extension.appendedEntries.length, 1);
 });
 
@@ -719,10 +918,13 @@ test("manually rewrites a short response with a disabled model after waiting for
   await extension.command.handler("   ", testContext.context);
 
   assert.equal(testContext.waitForIdleCalls, 1);
-  assert.equal(testContext.completionCalls, 1);
+  assert.equal(testContext.completionCalls, 2);
   assert.notEqual(requestSignal, commandSignal);
   assert.deepEqual(extension.appendedEntries, [
-    { customType: "slye.rewrite", data: { display: "Plain response.", targetEntryId: "target" } },
+    {
+      customType: "slye.rewrite",
+      data: { display: "Plain response.", rewrite: "Plain response.", targetEntryId: "target" },
+    },
   ]);
 });
 
@@ -775,7 +977,7 @@ test("manual picker saves a replacement as disabled and cancellation leaves conf
   });
   await extension.command.handler("", selected.context);
   assert.deepEqual(await readConfigFile(configPath), { enabled: false, model: { provider: "test", id: "model" } });
-  assert.equal(selected.completionCalls, 1);
+  assert.equal(selected.completionCalls, 2);
 });
 
 test("manual picker revalidates a changed target after saving an absent configuration", async (t) => {
@@ -808,11 +1010,11 @@ test("manual picker revalidates a changed target after saving an absent configur
   await extension.command.handler("", testContext.context);
 
   assert.deepEqual(await readConfigFile(configPath), { enabled: false, model: { provider: "test", id: "model" } });
-  assert.equal(testContext.completionCalls, 1);
+  assert.equal(testContext.completionCalls, 2);
   assert.deepEqual(extension.appendedEntries, [
     {
       customType: "slye.rewrite",
-      data: { display: "Plain response.", targetEntryId: "replacement-target" },
+      data: { display: "Plain response.", rewrite: "Plain response.", targetEntryId: "replacement-target" },
     },
   ]);
 });
@@ -851,7 +1053,7 @@ test("manual and automatic successes, including resumed cards, suppress duplicat
   await extension.command.handler("", testContext.context);
   await extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, testContext.context);
 
-  assert.equal(testContext.completionCalls, 1);
+  assert.equal(testContext.completionCalls, 2);
   assert.deepEqual(testContext.notifications, [
     { message: "The latest response already has a SLYE rewrite.", type: "info" },
   ]);
@@ -898,7 +1100,7 @@ test("automatic failures and append failures can be retried manually without ret
   await extension.command.handler("", testContext.context);
   await extension.command.handler("", testContext.context);
 
-  assert.equal(calls, 3);
+  assert.equal(calls, 6);
   assert.equal(extension.appendedEntries.length, 1);
   assert.deepEqual(testContext.notifications, [
     { message: "SLYE could not create a rewrite.", type: "warning" },
@@ -910,7 +1112,8 @@ test("an automatic request and a manual request claim the target before either c
   const directory = await setupConfiguredDirectory(t, true);
   const target = longAssistant();
   const branch = [entry("target", target)];
-  let resolveCompletion: ((value: unknown) => void) | undefined;
+  const resolveCompletions: Array<(value: unknown) => void> = [];
+  let calls = 0;
   let resolveStarted: (() => void) | undefined;
   const started = new Promise<void>((resolve) => {
     resolveStarted = resolve;
@@ -920,9 +1123,12 @@ test("an automatic request and a manual request claim the target before either c
     cwd: directory,
     branch,
     complete() {
-      resolveStarted?.();
+      calls += 1;
+      if (calls === 2) {
+        resolveStarted?.();
+      }
       return new Promise((resolve) => {
-        resolveCompletion = resolve;
+        resolveCompletions.push(resolve);
       });
     },
   });
@@ -930,10 +1136,12 @@ test("an automatic request and a manual request claim the target before either c
   const automatic = extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, testContext.context);
   await started;
   await extension.command.handler("", testContext.context);
-  resolveCompletion?.(response("stop", [text("Plain response.")]));
+  for (const resolve of resolveCompletions) {
+    resolve(response("stop", [text("Plain response.")]));
+  }
   await automatic;
 
-  assert.equal(testContext.completionCalls, 1);
+  assert.equal(testContext.completionCalls, 2);
   assert.equal(extension.appendedEntries.length, 1);
   assert.deepEqual(testContext.notifications, [
     { message: "SLYE is already rewriting the latest response.", type: "info" },
@@ -968,11 +1176,96 @@ test("Escape cancels the manual loader silently and a later manual request succe
   const retried = createContext({ cwd: directory, branch });
   await extension.command.handler("", retried.context);
   assert.equal(calls, 0);
-  assert.equal(retried.completionCalls, 1);
+  assert.equal(retried.completionCalls, 2);
   assert.equal(extension.appendedEntries.length, 1);
 });
 
-test("registers a safe persistent entry renderer", () => {
+test("renders tabbed cards, switches every card on click, and switches back with ctrl+\\", () => {
+  const extension = createExtension();
+  if (extension.renderer === undefined || extension.shortcut === undefined) {
+    throw new Error("SLYE did not register its tab controls");
+  }
+  const theme = {
+    bg(_name: string, value: string) {
+      return value;
+    },
+    bold(value: string) {
+      return `<bold>${value}</bold>`;
+    },
+    fg(name: string, value: string) {
+      return `<${name}>${value}</${name}>`;
+    },
+    colors: { customMessageBg: okhslColor(0.7, 0.8, 0.5) },
+    style(value: string) {
+      return value;
+    },
+  };
+  const entry = {
+    type: "custom" as const,
+    id: "saved",
+    parentId: null,
+    timestamp: "now",
+    customType: "slye.rewrite",
+    data: { display: "Simple text", rewrite: "Rewrite text" },
+  };
+
+  const card = extension.renderer(entry, { expanded: false }, theme as never);
+  const secondCard = extension.renderer({ ...entry, id: "saved-two" }, { expanded: false }, theme as never);
+  assert.match(card?.render(120).join("\n") ?? "", /<bold><accent>\[ ELI5 \]<\/accent><\/bold>/);
+  assert.match(secondCard?.render(120).join("\n") ?? "", /Rewrite text/);
+  assert.equal(card?.handleMouse?.({ type: "click", x: 0, y: 1 } as never), undefined);
+
+  const simpleTabX = 1 + visibleWidth("🤌 Speak like you eat   <bold><accent>[ ELI5 ]</accent></bold>  ");
+  assert.deepEqual(card?.handleMouse?.({ type: "click", x: simpleTabX, y: 1 } as never), { handled: true });
+  assert.match(card?.render(120).join("\n") ?? "", /<bold><accent>\[ Light \]<\/accent><\/bold>/);
+  assert.match(card?.render(120).join("\n") ?? "", /Simple text/);
+  assert.match(secondCard?.render(120).join("\n") ?? "", /Simple text/);
+
+  const testContext = createContext({ cwd: "/test", branch: [] });
+  extension.shortcut.handler(testContext.context);
+  assert.deepEqual(testContext.statusUpdates, [{ key: "slye", text: undefined }]);
+  assert.match(card?.render(120).join("\n") ?? "", /Rewrite text/);
+});
+
+test("uses a half-saturated custom message background for tabbed cards", () => {
+  const extension = createExtension();
+  if (extension.renderer === undefined) {
+    throw new Error("SLYE did not register its entry renderer");
+  }
+  const backgrounds: Color[] = [];
+  const theme = {
+    bg(_name: string, value: string) {
+      return value;
+    },
+    bold(value: string) {
+      return value;
+    },
+    fg(_name: string, value: string) {
+      return value;
+    },
+    colors: { customMessageBg: okhslColor(0.7, 0.8, 0.5) },
+    style(value: string, options: { bg: Color }) {
+      backgrounds.push(options.bg);
+      return value;
+    },
+  };
+  const entry = {
+    type: "custom" as const,
+    id: "saved",
+    parentId: null,
+    timestamp: "now",
+    customType: "slye.rewrite",
+    data: { display: "Simple text", rewrite: "Rewrite text" },
+  };
+
+  const card = extension.renderer(entry, { expanded: false }, theme as never);
+  card?.render(120);
+
+  const originalSaturation = colorToOkhsl(theme.colors.customMessageBg).s;
+  assert.ok(Math.abs(colorToOkhsl(backgrounds[0] as Color).s - originalSaturation / 2) < 0.01);
+});
+
+test("renders legacy cards without tabs and ignores malformed entries", () => {
   const extension = createExtension();
   if (extension.renderer === undefined) {
     throw new Error("SLYE did not register its entry renderer");
@@ -982,6 +1275,10 @@ test("registers a safe persistent entry renderer", () => {
       return text;
     },
     bold(text: string) {
+      return text;
+    },
+    colors: { customMessageBg: okhslColor(0.7, 0.8, 0.5) },
+    style(text: string) {
       return text;
     },
   };
@@ -1001,6 +1298,7 @@ test("registers a safe persistent entry renderer", () => {
     theme as never,
   );
   assert.match(restored?.render(120).join("\n") ?? "", /🤌 Speak like you eat:/);
+  assert.doesNotMatch(restored?.render(120).join("\n") ?? "", /\[ ELI5 \]/);
   assert.match(restored?.render(120).join("\n") ?? "", /Saved Markdown/);
   assert.match(metadataRestored?.render(120).join("\n") ?? "", /New Markdown/);
   assert.match(

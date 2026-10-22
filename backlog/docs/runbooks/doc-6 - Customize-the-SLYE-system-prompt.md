@@ -3,11 +3,11 @@ id: doc-6
 title: Customize the SLYE system prompt
 type: guide
 created_date: '2026-09-25 20:30'
-updated_date: '2026-10-20 13:42'
+updated_date: '2026-10-22 14:22'
 ---
 # Customize the SLYE system prompt
 
-Use this procedure to replace SLYE's built-in system prompt. The [specification](../specs/doc-1%20-%20SLYE-MVP-specification.md#custom-system-prompt) defines precedence, trust, and failure behavior.
+Use this procedure to replace SLYE's built-in Light system prompt. On Pi, the custom prompt drives the **Light** tab; the **ELI5** tab always uses SLYE's built-in ELI5 prompt. The [specification](../specs/doc-1%20-%20SLYE-MVP-specification.md#custom-system-prompt) defines precedence, trust, and failure behavior.
 
 ## Create the file
 
@@ -31,15 +31,15 @@ Preserve the original language, facts, qualifications, paths, commands, links, M
 Use Context only to understand the topic. Return only the rewritten Target, without a preamble.
 ```
 
-This is a starting example, not a copy of the complete built-in prompt. Add the style rules you need. SLYE still sends the same Context/Target user message with a final reminder to rewrite rather than answer the target.
+This is a starting example, not a copy of the complete built-in prompt. Add the style rules you need. SLYE still sends the Context/Target payload, with a final reminder specific to each version. Light's final reminder says to return the rewritten text and not answer the target; ELI5 has its own reminder to use the structure from the instructions and return only the rewritten text.
 
 ## Verify and change it
 
-Every actual rewrite in these steps makes a secondary provider request. Obtain explicit operator authorization before starting one.
+Every actual rewrite in these steps makes secondary provider requests: two on Pi (ELI5 and Light), one on OMP. Obtain explicit operator authorization before starting one.
 
 1. Configure a model with `/slye model` if needed.
 2. Obtain a fresh completed assistant response, then run `/slye` (or let automatic mode handle an eligible response).
-3. Check the new companion against your custom instructions. Model compliance can vary; original responses stay unchanged. To confirm the file is loaded at all, temporarily add an unmistakable instruction (for example, "rewrite everything in pirate speak") and check that the card follows it.
+3. Check the new companion against your custom instructions. On Pi, switch to the Light tab (click it or press `ctrl+\`). Model compliance can vary; original responses stay unchanged. To confirm the file is loaded at all, temporarily add an unmistakable instruction (for example, "rewrite everything in pirate speak") and check that the card follows it.
 4. Edit the prompt file and test on another fresh response. The next attempt rereads the file without restarting Pi or OMP. A response that already has a card will not be rewritten again.
 
 For an OMP project-prompt check, use a disposable project and place a temporary, recognizable instruction in `.omp/slye-prompt.md`. After authorization, rewrite a fresh response and record the visible instruction effect in the companion card. This verifies that OMP loads the project prompt for that run; it does not prove raw provider-request capture, every precedence case, or behavior in other OMP versions. Remove only the temporary prompt file when finished.

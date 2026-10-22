@@ -7,10 +7,8 @@ import {
   type ExtensionCommandContext,
   type ExtensionContext,
   getAgentDir,
-  getMarkdownTheme,
   type SessionEntry,
 } from "@earendil-works/pi-coding-agent";
-import { Box, Markdown, Text } from "@earendil-works/pi-tui";
 import {
   CONFIG_FILENAME,
   type EffectiveConfig,
@@ -22,9 +20,10 @@ import {
 } from "./config.ts";
 import { completeModel, lowestSupportedThinkingLevel, type ThinkingLevel } from "./model-completion.ts";
 import { formatModelCandidate, pickModel, selectModelCandidates } from "./model-picker.ts";
-import { completeRewrite, type RewriteOutcome } from "./model-rewrite.ts";
+import { type CompleteRewrite, completeRewrite, ELI5_SYSTEM_PROMPT, type RewriteOutcome } from "./model-rewrite.ts";
 import { loadEffectivePrompt, PROMPT_FILENAME } from "./prompt.ts";
 import { type PreparedRewriteRequest, prepareManualRewriteRequest, prepareRewriteRequest } from "./rewrite.ts";
+import { buildLegacyCard, buildTabbedCard, cardBackground, type SlyeTab } from "./tabs.ts";
 
 const USAGE = "Usage: /slye [model|on|off]";
 const MISSING_MODEL_GUIDANCE =
@@ -32,7 +31,6 @@ const MISSING_MODEL_GUIDANCE =
 const MODEL_SCOPE_ALL = "All projects";
 const MODEL_SCOPE_PROJECT = "This project only";
 const REWRITE_ENTRY_TYPE = "slye.rewrite";
-const REWRITE_HEADING = "🤌 Speak like you eat:";
 const NO_TARGET_MESSAGE = "There is no latest completed response to rewrite.";
 const DUPLICATE_MESSAGE = "The latest response already has a SLYE rewrite.";
 const IN_FLIGHT_MESSAGE = "SLYE is already rewriting the latest response.";
@@ -44,14 +42,16 @@ type SlyePaths = {
 
 type PiModel = NonNullable<ReturnType<ExtensionContext["modelRegistry"]["find"]>>;
 type UsableModel = { model: PiModel; thinkingLevel: ThinkingLevel };
-type RewriteEntryData = { display: string; targetEntryId?: string };
+type RewriteEntryData = { display: string; rewrite?: string; targetEntryId?: string };
 type ManualTargetInspection =
   | { kind: "no-target" }
   | { kind: "duplicate"; prepared: PreparedRewriteRequest }
   | { kind: "in-flight"; prepared: PreparedRewriteRequest }
   | { kind: "ready"; prepared: PreparedRewriteRequest };
 
-export default function speakLikeYouEat(pi: ExtensionAPI): void {
+export default function speakLikeYouEat(pi: ExtensionAPI, options?: { tabs?: boolean }): void {
+  const tabs = options?.tabs !== false;
+  let activeTab: SlyeTab = "rewrite";
   let hasShownStartupWarning = false;
   let hasShownProcessingWarning = false;
   const inFlightTargetEntryIds = new Set<string>();
@@ -64,11 +64,33 @@ export default function speakLikeYouEat(pi: ExtensionAPI): void {
       return undefined;
     }
 
-    const box = new Box(1, 1, (text) => theme.bg("customMessageBg", text));
-    box.addChild(new Text(theme.bold(REWRITE_HEADING), 0, 0));
-    box.addChild(new Markdown(data.display, 0, 1, getMarkdownTheme()));
-    return box;
+    if (!tabs) {
+      return buildLegacyCard(theme, data.display, (text) => theme.bg("customMessageBg", text));
+    }
+    if (data.rewrite === undefined) {
+      return buildLegacyCard(theme, data.display, cardBackground(theme));
+    }
+    return buildTabbedCard(
+      theme,
+      data.display,
+      data.rewrite,
+      () => activeTab,
+      (tab) => {
+        activeTab = tab;
+      },
+    );
   });
+
+  if (tabs) {
+    pi.registerShortcut("ctrl+\\", {
+      description: "Switch SLYE tab",
+      handler: (ctx) => {
+        activeTab = activeTab === "rewrite" ? "simple" : "rewrite";
+        // Pi exposes no render request to shortcut handlers; a status update triggers the re-render.
+        ctx.ui.setStatus("slye", undefined);
+      },
+    });
+  }
 
   pi.on("session_start", async (_event, ctx) => {
     if (ctx.mode !== "tui") {
@@ -319,22 +341,42 @@ export default function speakLikeYouEat(pi: ExtensionAPI): void {
         return { kind: "failed" };
       }
 
-      const outcome = await completeRewrite(
-        prepared.request,
-        signal,
-        (request, options) => completeModel(ctx.modelRegistry, model.model, request, options),
-        prompt.kind === "valid" ? prompt.text : undefined,
-      );
-      if (outcome.kind !== "success") {
+      const complete: CompleteRewrite = (request, options) =>
+        completeModel(ctx.modelRegistry, model.model, request, options);
+      const simplePrompt = prompt.kind === "valid" ? prompt.text : undefined;
+
+      if (!tabs) {
+        const outcome = await completeRewrite(prepared.request, signal, complete, simplePrompt);
+        if (outcome.kind !== "success") {
+          return outcome;
+        }
+
+        await pi.appendEntry<RewriteEntryData>(REWRITE_ENTRY_TYPE, {
+          display: outcome.display,
+          targetEntryId: prepared.entryId,
+        });
+        completedTargetEntryIds.add(prepared.entryId);
         return outcome;
       }
 
+      const [simple, rewrite] = await Promise.all([
+        completeRewrite(prepared.request, signal, complete, simplePrompt),
+        completeRewrite(prepared.request, signal, complete, ELI5_SYSTEM_PROMPT),
+      ]);
+      if (simple.kind === "cancelled" || rewrite.kind === "cancelled") {
+        return { kind: "cancelled" };
+      }
+      if (simple.kind !== "success" || rewrite.kind !== "success") {
+        return { kind: "failed" };
+      }
+
       await pi.appendEntry<RewriteEntryData>(REWRITE_ENTRY_TYPE, {
-        display: outcome.display,
+        display: simple.display,
+        rewrite: rewrite.display,
         targetEntryId: prepared.entryId,
       });
       completedTargetEntryIds.add(prepared.entryId);
-      return outcome;
+      return simple;
     } catch {
       return { kind: "failed" };
     }
@@ -529,11 +571,12 @@ function parseRewriteEntryData(data: unknown): RewriteEntryData | undefined {
     return undefined;
   }
 
+  const rewrite = "rewrite" in data && typeof data.rewrite === "string" ? data.rewrite : undefined;
   const targetEntryId =
     "targetEntryId" in data && typeof data.targetEntryId === "string" && data.targetEntryId.trim() !== ""
       ? data.targetEntryId
       : undefined;
-  return targetEntryId === undefined ? { display: data.display } : { display: data.display, targetEntryId };
+  return { display: data.display, rewrite, targetEntryId };
 }
 
 function hasExistingRewrite(branch: readonly SessionEntry[], targetEntryId: string): boolean {

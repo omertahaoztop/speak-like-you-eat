@@ -19,3 +19,13 @@
 **Practical consequence.** On Pi 0.86+, send secondary completions through `ctx.modelRegistry.streamSimple` (or another normalizing entry point), never a raw `Context` to a provider. Only a test through a real `ModelRegistry` catches this class of bug: keep the host packages pinned in `devDependencies` and the `test/system-prompt-delivery.test.ts` regression, which uses a real `ModelRegistry` against a local HTTP provider.
 
 **Links.** TASK-19; [SLYE MVP specification](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md)
+
+## 2026-10-22 — A pinned reviewer model was silently replaced by the session model
+
+**Hypothesis.** Pinning a reviewer to a model guarantees that the selected reviewer session uses that model.
+
+**Evidence.** The retired `ollama-cloud/deepseek-v4-flash:0731` pin was followed by `claude-opus-5-5` in prior TASK-21 taste, specification, and documentation logs. After the local reviewer pin was corrected to `ollama-cloud/deepseek-v4.1-flash`, the docs-review log `8ceadc3e-be5c-4b5` recorded that model. These are observed session outcomes, not proof of a universal Pi fallback algorithm.
+
+**Practical consequence.** When availability changes, verify the actual logged provider and model, keep the `.pi/agents/` pins and local `.pandino` assignment aligned, and use `fallback-runner` visibly if the pin is unavailable.
+
+**Links.** [TASK-21](backlog/tasks/task-21%20-%20Add-Rewrite-and-Simple-tabs-to-the-SLYE-companion-card-on-Pi.md)

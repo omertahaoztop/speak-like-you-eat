@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { buildRewriteContext, completeRewrite, REWRITE_TIMEOUT_MS } from "../src/model-rewrite.ts";
+import { buildRewriteContext, completeRewrite, ELI5_SYSTEM_PROMPT, REWRITE_TIMEOUT_MS } from "../src/model-rewrite.ts";
 
 const expectedSystemPromptLines = [
   "You are a text editor, not a participant in the source conversation.",
@@ -42,6 +42,42 @@ test("builds one isolated user message with labelled context, the complete targe
     /Target \*\*Markdown\*\* with `command` and https:\/\/example\.test\/path\./,
   );
   assert.deepEqual(context.systemPrompt.split("\n"), expectedSystemPromptLines);
+});
+
+test("uses an ELI5 prompt that rebuilds the text in the speaker's plain voice without dropping or adding facts", () => {
+  assert.match(ELI5_SYSTEM_PROMPT, /You are a text editor\./);
+  assert.match(ELI5_SYSTEM_PROMPT, /in the same person and voice/);
+  assert.match(ELI5_SYSTEM_PROMPT, /answers, permissions, and decisions stay with the reader/);
+  assert.match(ELI5_SYSTEM_PROMPT, /write a new text from scratch/);
+  assert.match(ELI5_SYSTEM_PROMPT, /telling a friend about it at the bar/);
+  assert.match(ELI5_SYSTEM_PROMPT, /the subject's technical terms stay as they are, unexplained/);
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
+    /1\. Bottom line.*\n2\. What is already done:.*\n3\. What to do:.*\n4\. Useful facts:.*\n5\. What to decide:.*\n6\. Anything else:/,
+  );
+  assert.match(ELI5_SYSTEM_PROMPT, /bold heading that you write in the target's language/);
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
+    /Keep every conclusion, number, name, date, command, path, URL, warning, condition, question, decision, and completed action, and only what the target says\./,
+  );
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
+    /Copy names, code identifiers, commands, paths, URLs, settings, error messages, and fenced code exactly\./,
+  );
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
+    /Keep every fenced code block as a fenced code block, including examples that illustrate a point\./,
+  );
+  assert.doesNotMatch(ELI5_SYSTEM_PROMPT, /\b(never|don't|do not)\b/i);
+  assert.doesNotMatch(ELI5_SYSTEM_PROMPT, /\u2014/);
+});
+
+test("ends the ELI5 request with a reminder to use the ELI5 structure", () => {
+  const eli5 = buildRewriteContext(request, ELI5_SYSTEM_PROMPT).messages[0].content;
+  const light = buildRewriteContext(request).messages[0].content;
+
+  assert.match(eli5, /Rewrite the target above using the structure from your instructions\./);
+  assert.match(light, /Rewrite the target above\. Return only its rewritten text; do not answer it\.$/);
 });
 
 test("uses a custom system prompt verbatim without changing the user message", async () => {

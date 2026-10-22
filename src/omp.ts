@@ -78,7 +78,7 @@ type OmpRuntimeApi = {
 export default function speakLikeYouEatOmp(omp: ExtensionAPI): void {
   const runtime = omp as unknown as OmpRuntimeApi;
   registerOmpContextIsolation(runtime);
-  speakLikeYouEat(createOmpExtensionApi(runtime));
+  speakLikeYouEat(createOmpExtensionApi(runtime), { tabs: false });
 }
 
 function createOmpExtensionApi(runtime: OmpRuntimeApi): ExtensionAPI {
