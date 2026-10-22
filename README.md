@@ -62,12 +62,12 @@ To replace the built-in Light prompt with your own `slye-prompt.md`, follow [Cus
 
 Use cheap-ish, fast models; SLYE sets reasoning for you. Both Pi tabs use the same model. In order:
 
-1. **Claude Haiku 5.5** - the best ELI5: it restructures well, drops jargon, keeps the facts and code examples, and roughly halves long answers.
-2. **GPT-6 Luna** - good ELI5 and the shortest output, but it tends to drop illustrative code examples.
-3. **DeepSeek V4.1 Flash** - the fastest and good for Light; its ELI5 sometimes keeps jargon and drops code examples.
-4. **Gemma 4 31B** - plain, short ELI5, but it cuts content, occasionally adds a question, and drops most code blocks.
+1. **Claude Haiku 5.5** - the best ELI5: it restructures well, drops jargon, keeps the facts and code examples, and roughly halves long answers. On Light it stays faithful and always keeps code intact, though some jargon survives.
+2. **GPT-6 Luna** - removes jargon best on Light and gives a good, short ELI5, but in both tabs it sometimes drops code examples or code comments.
+3. **DeepSeek V4.1 Flash** - the fastest. Light stays faithful to the original but keeps much of the jargon; ELI5 sometimes keeps jargon and drops code examples.
+4. **Gemma 4 31B** - plain and short in both tabs, but it cuts content and sometimes shifts the meaning; in ELI5 it drops most code blocks and occasionally adds a question.
 
-These rankings come from a small manual trial on real answers; the scored [benchmark](backlog/docs/specs/doc-4%20-%20SLYE-benchmark-results.md) covers only the Light prompt.
+These rankings come from a small manual trial on real answers; the scored [benchmark](backlog/docs/specs/doc-4%20-%20SLYE-benchmark-results.md) covers an earlier version of the Light prompt.
 
 ## What SLYE guarantees
 

@@ -3,7 +3,7 @@ id: doc-1
 title: SLYE MVP specification
 type: specification
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-22 13:06'
+updated_date: '2026-10-22 13:36'
 ---
 # SLYE MVP specification
 
@@ -94,7 +94,7 @@ See the complete reviewed [benchmark results](doc-4%20-%20SLYE-benchmark-results
 - Quality-first recommendation: `openai-codex/gpt-5.6-terra` with reasoning off. Low-latency recommendation: `ollama-cloud/deepseek-v4-flash:0731` with reasoning off. Across both prompt phases, measured DeepSeek latency was about one-third of Terra latency.
 - `ollama-cloud/gpt-oss:20b` was tested at low and high thinking across all six fixtures. Low was fast but lower quality; high improved quality only slightly while increasing mean latency from about 1.7 seconds to about 17.2 seconds, so neither configuration is recommended.
 - `ollama-cloud/gpt-oss:120b` low was fast and competitive under the original prompt but regressed slightly under the promoted prompt. Higher thinking across the matrix did not reliably improve rewrite quality.
-- ELI5 prompt trials (2026-10-21 and 2026-10-22, real answers, not a scored benchmark) ranked `anthropic/claude-haiku-5-5` first, then `openai/gpt-6-luna`, `ollama-cloud/deepseek-v4.1-flash`, and `ollama-cloud/gemma4:31b`. Haiku followed the structure, dropped jargon, and kept code examples most reliably. Luna, DeepSeek, and Gemma tended to drop illustrative code examples; DeepSeek sometimes kept corporate jargon; Gemma cut content and occasionally added a question. `ollama-cloud/gpt-oss:20b` translated Italian answers into English and invented steps, `ollama-cloud/glm-5.3-flash` wrote its reasoning into the card, and `ollama-cloud/minimax-m3.1-flash` often exceeded two minutes. Both Pi tabs use the same configured model.
+- Prompt trials on real answers (2026-10-21 and 2026-10-22, not a scored benchmark) ranked `anthropic/claude-haiku-5-5` first, then `openai/gpt-6-luna`, `ollama-cloud/deepseek-v4.1-flash`, and `ollama-cloud/gemma4:31b`, across both tabs. On ELI5, Haiku followed the structure, dropped jargon, and kept code examples most reliably; Luna, DeepSeek, and Gemma tended to drop illustrative code examples, DeepSeek sometimes kept corporate jargon, and Gemma cut content and occasionally added a question. On Light, all four kept the layout and inline code; Haiku and DeepSeek kept every fenced block intact, Luna and Gemma sometimes dropped an illustrative block or code comments; Luna removed the most corporate jargon, DeepSeek the least, and Gemma shortened the most and sometimes shifted the meaning. `ollama-cloud/gpt-oss:20b` translated Italian answers into English and invented steps, `ollama-cloud/glm-5.3-flash` wrote its reasoning into the card, and `ollama-cloud/minimax-m3.1-flash` often exceeded two minutes. Both Pi tabs use the same configured model.
 - SLYE automatically uses a model's lowest supported thinking level and provides no thinking control. Thinking labels here are explicit tested benchmark configurations, not user-selectable SLYE settings. The corpus is deliberately small, so these are practical recommendations rather than universal provider guarantees.
 
 ## Interaction and failures

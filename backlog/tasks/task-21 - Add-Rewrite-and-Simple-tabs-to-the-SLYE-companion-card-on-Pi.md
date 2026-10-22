@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-20 15:56'
-updated_date: '2026-10-22 13:06'
+updated_date: '2026-10-22 13:36'
 labels:
   - feature
 dependencies:
@@ -109,4 +109,6 @@ Live feedback 2026-10-22 (2): ELI5 must not be dumbed down (keep field vocabular
 Prompt cleanup 2026-10-22 (operator feedback): ELI5 prompt rewritten as positive instructions only (no never/do-not rules), no per-language label lists (English default headings the model writes in the target language), and a general "reader knows the subject, no frills, friend at the bar" voice instead of word lists. Tested on 6 targets x 3 runs (Italian corporate wall with/without context, Italian code review, Spanish corporate text, AWS diagnosis, English verbose answer) with haiku-5-5 and deepseek-v4.1-flash: haiku 17-18/18 structured, 0 jargon-heavy, 0 English headings in non-English text; deepseek 13/13 structured with the ELI5 reminder vs 11/13 without (corporate wall 1/3 vs 0/3), 1 jargon-heavy run. Short canonical headings ("Done", "Good to know") were copied verbatim into non-English output; descriptive headings ("What is already done", "Useful facts") were translated reliably. ELI5 reminder kept. deepseek returned provider errors on 5 of 18 concurrent requests in these batches (single requests succeeded).
 
 Code blocks 2026-10-22: ELI5 sometimes dropped fenced code. Trials on 12 answers with code (10 real, 2 synthetic): illustrative examples were the ones dropped; one-line commands moved inline (fine); patches/config kept. Added one positive rule: keep every fenced block as a block, including illustrative examples, next to its sentence; one-line commands may go inline; terminal output/logs used only as evidence may be cut. Blocks kept as blocks: haiku 33/63 -> 47/63 (content anywhere 52 -> 59); luna 26 -> 25/63; deepseek ~unchanged; gemma4:31b 5 -> 8/42. Operator ranking for README: haiku, luna, deepseek, gemma4.
+
+Light trials 2026-10-22: 8 answers x 2 runs with haiku-5-5, gpt-6-luna, deepseek-v4.1-flash, gemma4:31b. All kept layout and inline code (no added headings). Fenced blocks intact: haiku 12/12, deepseek 12/12, luna 10/12, gemma 10/12 (dropped the illustrative snippet, stripped code comments). Corporate jargon left (of 96 source terms across Italian and Spanish walls): luna 6, gemma 10, haiku 23, deepseek 47. Average length: haiku 99%, deepseek 97%, luna 93%, gemma 84% (gemma sometimes shifts meaning). README ranking kept: haiku, luna, deepseek, gemma, with per-tab notes.
 <!-- SECTION:NOTES:END -->
