@@ -1,11 +1,11 @@
 ---
 id: TASK-22
 title: Run release PR checks automatically and require green CI on main
-status: In Progress
+status: Done
 assignee:
   - '@zambo'
 created_date: '2026-10-22 15:46'
-updated_date: '2026-10-22 16:49'
+updated_date: '2026-10-22 17:37'
 labels:
   - ci
   - release
@@ -23,12 +23,12 @@ ordinal: 22000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-At task start, Release Please created pull requests with GITHUB_TOKEN, so GitHub held their pull_request workflows for manual approval, and main had neither branch protection nor rulesets. The operator approved a repository-scoped GitHub App for Release Please and main protection with mandatory up-to-date CI, no bypass (including administrators), no external reviewer requirement and no automatic merge/publication. Preserve protections for external contributions and npm OIDC publishing. App registration, credentials, main protection and hosted smoke verification are complete; production workflow activation remains pending configuration PR merge.
+Release Please now uses a short-lived, current-repository GitHub App installation token, so its PR workflows can run without manual approval. Main requires a pull request, successful GitHub Actions check, and an up-to-date branch, with no bypass and no mandatory second-person review. App registration, scoped installation and credentials, live main protection, hosted App-authored PR smoke verification, documentation, and post-merge production activation are complete. External-contributor approval settings and npm OIDC publishing remain unchanged.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Release Please uses a short-lived token from a GitHub App installed only for speak-like-you-eat, with only necessary repository permissions; private key stays in GitHub secrets and never in Git or logs
+- [x] #1 Release Please uses a short-lived token from a GitHub App installed only for speak-like-you-eat, with only necessary repository permissions; private key stays in GitHub secrets and never in Git or logs
 - [x] #2 An App-authored test or release PR starts the existing CI automatically without clicking Approve workflows to run, verified by a hosted run
 - [x] #3 An active main ruleset requires a pull request, the GitHub Actions check job, and a branch up to date with main, with no bypass actors and zero required external review approvals
 - [x] #4 Pending or failed required checks block merge while successful current-head CI allows it, without performing an unapproved merge or publication
@@ -63,4 +63,12 @@ Decision-7 content and links verified: CLI-created metadata preserved and linked
 Final review14912f7f-c1ed-499 completed on actual openai/gpt-6.1-sol: verdict merge, no must-fix or minor findings. This means ready for user-controlled configuration PR/manual merge, not authorization to merge or publish. Reviewer independently passed139tests, Biome and TypeScript. Orchestrator re-read workflow/runbook/ruleset/decision, confirmed live rule25653617 still active/current_user_can_bypass never and repository variable/secret names present, then reran npm run check139/139, both benchmark dry-runs, frozen manifest diff,16-file npm pack dry-run, YAML/JSON parsing and whitespace checks successfully. Runbook setup/recovery and full-replacement warning, decision rationale and live ruleset declaration satisfy AC5; no product/prompt changes. After discussing PAT vs App for this solo project, operator chose to retain the already working, verified App without broadening its repository access. Operator authorized committing all changes and updating pickup; production activation remains pending separate manual merge and post-merge ReleasePlease authentication verification.
 
 Handoff 2026-10-22: committed implementation, declarative ruleset, decision7, runbook and task in102f7e95d8eba989717fbaa55a24440554522810; pushed origin/chore/release-ci-protection. Configuration PR16: https://github.com/wtfzambo/speak-like-you-eat/pull/16. Hosted PR check passed in run39817053611 on that exact head; GitHub reported CLEAN/MERGEABLE. Final housekeeping commit changes only task notes and pickup, with its current-head CI to be verified before reporting done. Existing paired/docs/final reviews remain applicable; no repeated review needed for the trivial handoff metadata. All implementation is ready. AC1 intentionally remains unchecked and task stays In Progress until user manually merges PR16 and the ensuing main ReleasePlease run proves App-token authentication. No merge, workflow dispatch, release or publication was performed. Local secret-material scan of staged additions clean; no personal configuration touched.
+
+2026-10-22 production activation verified after the operator manually merged PR16 at17:33:36UTC, merge commit be6b6c4526d4dd292cb66875047209853fc0e7b8. Push-triggered main Release run39823780274 on that exact SHA completed successfully: Create GitHub App token success, googleapis/release-please-action@v5 success, Post Create GitHub App token success. Publication dispatch was correctly skipped because no release was created. Live main rule25653617 remains active with empty bypass list and current_user_can_bypass never. Local main fast-forwarded cleanly to origin/main at the merge commit. Combined with prior App-authored PR15 automatic CI and enforcement smoke evidence, this proves the remaining AC1 and completes all5criteria. No manual workflow dispatch, additional release, npm publication or main-rule bypass performed by the agent. Only task closure and pickup metadata are being committed on a separate branch because main now requires PRs; no implementation changes or repeated substantive reviews needed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented and activated App-authenticated Release Please and enforced green, up-to-date CI before main merges. Verified automatic App-authored PR CI and pending/failure blocking through disposable PR15, successful current-head merge eligibility, 139 tests and other release gates, scoped credentials and live no-bypass ruleset. User merged PR16; production main run39823780274 successfully minted the App token, ran Release Please and completed token cleanup. All5acceptance criteria satisfied. Existing npm OIDC and exact-tag dispatch flow preserved; no auto-merge or external-PR approval relaxation.
+<!-- SECTION:FINAL_SUMMARY:END -->
