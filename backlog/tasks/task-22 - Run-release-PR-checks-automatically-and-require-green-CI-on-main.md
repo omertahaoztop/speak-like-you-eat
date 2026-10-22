@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-22 15:46'
-updated_date: '2026-10-22 16:47'
+updated_date: '2026-10-22 16:49'
 labels:
   - ci
   - release
@@ -61,4 +61,6 @@ Docs reviewer9837a849 found two must-fixes: add a formal decision for App-vs-tok
 Decision-7 content and links verified: CLI-created metadata preserved and linked task/runbook paths resolve. User explanation screenshots captured from actual current GitHub App installation, repository Actions secret listing (name only, no secret value), and client-ID variable listing. Saved outside Git under /Users/wtfzambo/.pi/browser-artifacts/slye-release-app/. Started the one whole-branch final review as agent14912f7f-c1ed-499 after docs must-fixes; result is pending, not inferred. No commit, push, configuration PR, merge or production authentication activation yet.
 
 Final review14912f7f-c1ed-499 completed on actual openai/gpt-6.1-sol: verdict merge, no must-fix or minor findings. This means ready for user-controlled configuration PR/manual merge, not authorization to merge or publish. Reviewer independently passed139tests, Biome and TypeScript. Orchestrator re-read workflow/runbook/ruleset/decision, confirmed live rule25653617 still active/current_user_can_bypass never and repository variable/secret names present, then reran npm run check139/139, both benchmark dry-runs, frozen manifest diff,16-file npm pack dry-run, YAML/JSON parsing and whitespace checks successfully. Runbook setup/recovery and full-replacement warning, decision rationale and live ruleset declaration satisfy AC5; no product/prompt changes. After discussing PAT vs App for this solo project, operator chose to retain the already working, verified App without broadening its repository access. Operator authorized committing all changes and updating pickup; production activation remains pending separate manual merge and post-merge ReleasePlease authentication verification.
+
+Handoff 2026-10-22: committed implementation, declarative ruleset, decision7, runbook and task in102f7e95d8eba989717fbaa55a24440554522810; pushed origin/chore/release-ci-protection. Configuration PR16: https://github.com/wtfzambo/speak-like-you-eat/pull/16. Hosted PR check passed in run39817053611 on that exact head; GitHub reported CLEAN/MERGEABLE. Final housekeeping commit changes only task notes and pickup, with its current-head CI to be verified before reporting done. Existing paired/docs/final reviews remain applicable; no repeated review needed for the trivial handoff metadata. All implementation is ready. AC1 intentionally remains unchecked and task stays In Progress until user manually merges PR16 and the ensuing main ReleasePlease run proves App-token authentication. No merge, workflow dispatch, release or publication was performed. Local secret-material scan of staged additions clean; no personal configuration touched.
 <!-- SECTION:NOTES:END -->
