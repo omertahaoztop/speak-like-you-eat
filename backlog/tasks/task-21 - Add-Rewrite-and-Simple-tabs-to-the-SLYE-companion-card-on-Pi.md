@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-20 15:56'
-updated_date: '2026-10-22 11:12'
+updated_date: '2026-10-22 13:06'
 labels:
   - feature
 dependencies:
@@ -107,4 +107,6 @@ Live feedback 2026-10-22: ELI5 summarised but kept workplace jargon and acronyms
 Live feedback 2026-10-22 (2): ELI5 must not be dumbed down (keep field vocabulary such as class, function, KPI when plain), must drop corporate jargon, must sound like someone knowledgeable talking at the bar, and must speak in the original speaker voice (no "il testo propone"). Prompt now leads with a bar-voice instruction, first-person voice rule, technical-vocabulary exception, and an exact-meaning rule (offline is not online). Trials on corporate wall (with and without context) and an Italian code-review answer: haiku-5-5 drops nearly all corporate jargon and keeps technical terms in 3/3 runs; deepseek-v4.1-flash keeps technical terms but sometimes copies corporate jargon (1 of 3 runs heavily). Operator accepts haiku.
 
 Prompt cleanup 2026-10-22 (operator feedback): ELI5 prompt rewritten as positive instructions only (no never/do-not rules), no per-language label lists (English default headings the model writes in the target language), and a general "reader knows the subject, no frills, friend at the bar" voice instead of word lists. Tested on 6 targets x 3 runs (Italian corporate wall with/without context, Italian code review, Spanish corporate text, AWS diagnosis, English verbose answer) with haiku-5-5 and deepseek-v4.1-flash: haiku 17-18/18 structured, 0 jargon-heavy, 0 English headings in non-English text; deepseek 13/13 structured with the ELI5 reminder vs 11/13 without (corporate wall 1/3 vs 0/3), 1 jargon-heavy run. Short canonical headings ("Done", "Good to know") were copied verbatim into non-English output; descriptive headings ("What is already done", "Useful facts") were translated reliably. ELI5 reminder kept. deepseek returned provider errors on 5 of 18 concurrent requests in these batches (single requests succeeded).
+
+Code blocks 2026-10-22: ELI5 sometimes dropped fenced code. Trials on 12 answers with code (10 real, 2 synthetic): illustrative examples were the ones dropped; one-line commands moved inline (fine); patches/config kept. Added one positive rule: keep every fenced block as a block, including illustrative examples, next to its sentence; one-line commands may go inline; terminal output/logs used only as evidence may be cut. Blocks kept as blocks: haiku 33/63 -> 47/63 (content anywhere 52 -> 59); luna 26 -> 25/63; deepseek ~unchanged; gemma4:31b 5 -> 8/42. Operator ranking for README: haiku, luna, deepseek, gemma4.
 <!-- SECTION:NOTES:END -->

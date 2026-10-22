@@ -64,6 +64,10 @@ test("uses an ELI5 prompt that rebuilds the text in the speaker's plain voice wi
     ELI5_SYSTEM_PROMPT,
     /Copy names, code identifiers, commands, paths, URLs, settings, error messages, and fenced code exactly\./,
   );
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
+    /Keep every fenced code block as a fenced code block, including examples that illustrate a point\./,
+  );
   assert.doesNotMatch(ELI5_SYSTEM_PROMPT, /\b(never|don't|do not)\b/i);
   assert.doesNotMatch(ELI5_SYSTEM_PROMPT, /\u2014/);
 });

@@ -76,6 +76,7 @@ export const ELI5_SYSTEM_PROMPT = [
   "- Keep every conclusion, number, name, date, command, path, URL, warning, condition, question, decision, and completed action, and only what the target says.",
   "- Aim for about half the length of the target: cut the story of how things were found, evidence for facts already stated, code quotes, and details the reader needs neither to act nor to decide, and merge repeated points.",
   "- Copy names, code identifiers, commands, paths, URLs, settings, error messages, and fenced code exactly.",
+  "- Keep every fenced code block as a fenced code block, including examples that illustrate a point. Put each one where it fits in the new structure, next to the sentence it belongs to. A one-line command can go inline in its step. Terminal output and logs that only show how something was found may be cut.",
   "",
   "Language:",
   "- Write in the target's main language, labels included.",

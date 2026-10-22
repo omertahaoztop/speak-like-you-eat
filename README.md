@@ -60,13 +60,14 @@ To replace the built-in Light prompt with your own `slye-prompt.md`, follow [Cus
 
 ### Recommended models
 
-Use cheap-ish, fast models with low or no reasoning; SLYE sets reasoning for you. Both Pi tabs use the same model.
+Use cheap-ish, fast models; SLYE sets reasoning for you. Both Pi tabs use the same model. In order:
 
-- **Claude Haiku 5.5** - best ELI5 results in my trials: it restructures well, keeps the facts, and roughly halves long answers
-- **GPT-6 Luna** - good ELI5 and the shortest output, not the fastest
-- **DeepSeek V4.1 Flash** - the fastest; good Light rewrites and a correct ELI5 structure, but it shortens long answers less
+1. **Claude Haiku 5.5** - the best ELI5: it restructures well, drops jargon, keeps the facts and code examples, and roughly halves long answers.
+2. **GPT-6 Luna** - good ELI5 and the shortest output, but it tends to drop illustrative code examples.
+3. **DeepSeek V4.1 Flash** - the fastest and good for Light; its ELI5 sometimes keeps jargon and drops code examples.
+4. **Gemma 4 31B** - plain, short ELI5, but it cuts content, occasionally adds a question, and drops most code blocks.
 
-Avoid models that write their reasoning into the answer (for example GLM 5.3 Flash), and GPT-OSS 20B, which translated Italian answers into English and invented steps in ELI5. These ELI5 notes come from a small manual trial on six real answers; the scored [benchmark](backlog/docs/specs/doc-4%20-%20SLYE-benchmark-results.md) covers only the Light prompt.
+These rankings come from a small manual trial on real answers; the scored [benchmark](backlog/docs/specs/doc-4%20-%20SLYE-benchmark-results.md) covers only the Light prompt.
 
 ## What SLYE guarantees
 

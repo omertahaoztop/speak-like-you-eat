@@ -3,7 +3,7 @@ id: doc-1
 title: SLYE MVP specification
 type: specification
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-22 11:12'
+updated_date: '2026-10-22 13:06'
 ---
 # SLYE MVP specification
 
@@ -84,7 +84,7 @@ The ELI5 prompt is adapted from the MIT-licensed [unslop](https://github.com/cur
 
 - It keeps the Light prompt's editor role, source-text isolation, and output-only rules. It writes as the target's speaker, in the same person and voice, as if the speaker had written it that way. Questions and requests stay as they are; answers, permissions, and decisions stay with the reader. Prior context shows what the reader asked and what matters to them.
 - It always rebuilds the text in a fixed order, skipping empty parts: a bottom line with the conclusion and what the speaker needs; what is already done, with concrete values; what to do, numbered; up to five useful facts; what to decide, numbered; anything else. Each part after the bottom line gets a short bold heading the model writes in the target's language, so any language works. Proposed steps stay steps, with the bottom line saying they are a proposal; alternatives and optional extras go with the decisions.
-- It ignores the target's layout, so Markdown structure changes. It keeps every conclusion, number, name, date, command, path, URL, warning, condition, question, decision, and completed action, and only what the target says, aiming for about half the length by cutting how things were found, redundant evidence, code quotes, and details the reader needs neither to act nor to decide.
+- It ignores the target's layout, so Markdown structure changes. It keeps every conclusion, number, name, date, command, path, URL, warning, condition, question, decision, and completed action, and only what the target says, aiming for about half the length by cutting how things were found, redundant evidence, and details the reader needs neither to act nor to decide. Fenced code blocks stay fenced, including illustrative examples, placed next to the sentence they belong to; a one-line command may go inline in its step, and terminal output or logs that only show how something was found may be cut.
 - It writes in the target's language in the voice of someone who knows the subject telling a friend at the bar. The reader is assumed to know the subject, so its technical terms stay unexplained; office jargon, project-management terms, consultant phrases, borrowed business terms, buzzwords, and figures of speech become plain words with the same meaning. Names, code identifiers, commands, paths, URLs, settings, error messages, and fenced code are copied exactly. Sentences are short, and bold marks only what the reader must see.
 
 ## Benchmark guidance
@@ -94,7 +94,7 @@ See the complete reviewed [benchmark results](doc-4%20-%20SLYE-benchmark-results
 - Quality-first recommendation: `openai-codex/gpt-5.6-terra` with reasoning off. Low-latency recommendation: `ollama-cloud/deepseek-v4-flash:0731` with reasoning off. Across both prompt phases, measured DeepSeek latency was about one-third of Terra latency.
 - `ollama-cloud/gpt-oss:20b` was tested at low and high thinking across all six fixtures. Low was fast but lower quality; high improved quality only slightly while increasing mean latency from about 1.7 seconds to about 17.2 seconds, so neither configuration is recommended.
 - `ollama-cloud/gpt-oss:120b` low was fast and competitive under the original prompt but regressed slightly under the promoted prompt. Higher thinking across the matrix did not reliably improve rewrite quality.
-- ELI5 prompt trials (2026-10-21, six real long answers, not a scored benchmark): `anthropic/claude-haiku-5-5`, `openai/gpt-6-luna`, and `ollama-cloud/deepseek-v4.1-flash` followed the ELI5 structure. Haiku and Luna also cut length substantially; DeepSeek was the fastest but shortened long answers less. `ollama-cloud/gpt-oss:20b` translated Italian answers into English and invented steps. `ollama-cloud/gpt-oss:120b` invented steps before the prompt forbade it. `ollama-cloud/glm-5.3-flash` wrote its reasoning into the card, and `ollama-cloud/minimax-m3.1-flash` often exceeded two minutes. Both Pi tabs use the same configured model.
+- ELI5 prompt trials (2026-10-21 and 2026-10-22, real answers, not a scored benchmark) ranked `anthropic/claude-haiku-5-5` first, then `openai/gpt-6-luna`, `ollama-cloud/deepseek-v4.1-flash`, and `ollama-cloud/gemma4:31b`. Haiku followed the structure, dropped jargon, and kept code examples most reliably. Luna, DeepSeek, and Gemma tended to drop illustrative code examples; DeepSeek sometimes kept corporate jargon; Gemma cut content and occasionally added a question. `ollama-cloud/gpt-oss:20b` translated Italian answers into English and invented steps, `ollama-cloud/glm-5.3-flash` wrote its reasoning into the card, and `ollama-cloud/minimax-m3.1-flash` often exceeded two minutes. Both Pi tabs use the same configured model.
 - SLYE automatically uses a model's lowest supported thinking level and provides no thinking control. Thinking labels here are explicit tested benchmark configurations, not user-selectable SLYE settings. The corpus is deliberately small, so these are practical recommendations rather than universal provider guarantees.
 
 ## Interaction and failures
