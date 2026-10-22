@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-20 15:56'
-updated_date: '2026-10-22 10:21'
+updated_date: '2026-10-22 10:50'
 labels:
   - feature
 dependencies:
@@ -103,4 +103,6 @@ Live use 2026-10-21: the unslop-based Rewrite prompt kept Italian corporate jarg
 Prompt trials 2026-10-21 (round 2): the first ELI5 prompt still mirrored the target layout in live use. Iterated drafts on six real long answers from local sessions (with the user question as context) across deepseek-v4.1-flash, claude-opus-5-5, gpt-6-luna, gpt-oss:120b, then claude-haiku-5-5, glm-5.3-flash, minimax-m3.1-flash, gpt-oss:20b. Final prompt: write a new text from scratch in a fixed order (bottom line, done, steps, key facts, open decisions, side notes), labels in the target language, suggestions never become steps, completed actions never dropped, about half the length. Results: haiku-5-5 best, gpt-6-luna good, deepseek fastest but shortens less; gpt-oss:20b translated to English and invented steps; glm-5.3-flash leaks reasoning into output; minimax-m3.1-flash often over 2 minutes. README recommended models updated accordingly. Operator decision: one model for both tabs; per-tab models deferred.
 
 Live feedback 2026-10-22: ELI5 summarised but kept workplace jargon and acronyms (KPI, stakeholder, RACI, discovery, steering committee), put proposed steps under decisions, and used an English label in Italian text. Prompt now: words a smart 12-year-old knows, every jargon term and acronym replaced even if common at work, only must-type/recognise items kept; proposed steps stay steps; fixed bilingual labels; context instructions about format ignored. Fast models (deepseek) mirrored one-paragraph targets in 3 of 4 runs when the context asked for one paragraph; an ELI5-specific final reminder fixed it (4/4 structured). Trials: deepseek-v4.1-flash, claude-haiku-5-5, gpt-6-luna on 8 targets incl. the live corporate-jargon wall: all structured, jargon-word scan near zero.
+
+Live feedback 2026-10-22 (2): ELI5 must not be dumbed down (keep field vocabulary such as class, function, KPI when plain), must drop corporate jargon, must sound like someone knowledgeable talking at the bar, and must speak in the original speaker voice (no "il testo propone"). Prompt now leads with a bar-voice instruction, first-person voice rule, technical-vocabulary exception, and an exact-meaning rule (offline is not online). Trials on corporate wall (with and without context) and an Italian code-review answer: haiku-5-5 drops nearly all corporate jargon and keeps technical terms in 3/3 runs; deepseek-v4.1-flash keeps technical terms but sometimes copies corporate jargon (1 of 3 runs heavily). Operator accepts haiku.
 <!-- SECTION:NOTES:END -->

@@ -63,8 +63,12 @@ test("uses an ELI5 prompt that rebuilds the text in a fixed order without droppi
     ELI5_SYSTEM_PROMPT,
     /never drop a conclusion, a completed action, a number, a proposed step, or a decision/,
   );
-  assert.match(ELI5_SYSTEM_PROMPT, /Use the words a smart 12-year-old knows\./);
+  assert.match(ELI5_SYSTEM_PROMPT, /in the same person and voice/);
+  assert.match(ELI5_SYSTEM_PROMPT, /Never describe or report the target/);
+  assert.match(ELI5_SYSTEM_PROMPT, /explaining this to a friend at the bar/);
   assert.match(ELI5_SYSTEM_PROMPT, /even when the term is common at work/);
+  assert.match(ELI5_SYSTEM_PROMPT, /technical vocabulary of the subject itself/);
+  assert.match(ELI5_SYSTEM_PROMPT, /never turn a term into its opposite/);
   assert.match(ELI5_SYSTEM_PROMPT, /In a non-English target, business English always counts as jargon\./);
   assert.match(ELI5_SYSTEM_PROMPT, /Always use this structure, even when the target is a single paragraph/);
   assert.match(ELI5_SYSTEM_PROMPT, /never left in English in a non-English text/);

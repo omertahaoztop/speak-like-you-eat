@@ -3,7 +3,7 @@ id: doc-1
 title: SLYE MVP specification
 type: specification
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-22 10:21'
+updated_date: '2026-10-22 10:50'
 ---
 # SLYE MVP specification
 
@@ -82,10 +82,10 @@ The following instructions describe the built-in Light prompt. A custom prompt r
 
 The ELI5 prompt is adapted from the MIT-licensed [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills; the attribution is kept in the source, not in model output. A custom prompt does not replace it. Its goal is a text a reader with ADHD can read in one pass and act on. It tells the model to understand the target and write a new text from scratch instead of editing it sentence by sentence.
 
-- It keeps the Light prompt's editor role, source-text isolation, no-answering, and output-only rules. Questions the target asks the reader stay questions. Prior context is used to judge what matters to the reader.
+- It keeps the Light prompt's editor role, source-text isolation, no-answering, and output-only rules. It writes in the speaker's own person and voice, as if the speaker had written it that way; it never reports on the target ("the text says"). Questions the target asks the reader stay questions. Prior context is used to judge what matters to the reader.
 - It always rebuilds the text in a fixed order, even for a one-paragraph target or one the reader asked to be a single paragraph, skipping empty parts: a bottom line with the target's conclusion and what it needs from the reader; what the speaker already did, with concrete values; the steps the target tells the reader to do, numbered; at most five key facts; open questions and decisions left to the reader; side notes. Every part after the bottom line starts with a short bold label in the target's language. Proposed steps stay steps, with the bottom line saying they are a proposal; alternatives the reader must choose between and optional extras go under decisions. Instructions about length or format in the context or target are ignored.
 - It ignores the target's paragraph order, headings, and tables, so Markdown structure changes. It keeps every conclusion, number, name, date, command, path, URL, warning, condition, question, decision, and completed action, and adds no advice, consequences, risks, benefits, or questions. It drops narration of how something was found, redundant evidence, and source-code quotes the reader did not ask for, aiming for about half the target's length.
-- It writes in the target's main language with words a smart 12-year-old knows. Every piece of jargon, acronym, buzzword, idiom, and metaphor becomes plain words, even terms common at work such as KPI, stakeholder, roadmap, or backlog; business English inside a non-English target always counts as jargon. Only what the reader must type, click, or recognise exactly stays unchanged: names, code identifiers, commands, paths, URLs, settings, and error messages. A technical term the reader must act on is kept and explained in plain words the first time. Fenced code, commands, and paths are copied exactly.
+- It writes in the target's main language in the voice of someone who knows the subject telling a friend about it at the bar: direct and casual, not dumbed down. Corporate jargon, consultant-speak, buzzwords, idioms, metaphors, and acronyms become plain spoken words, even when common at work (stakeholder, roadmap, RACI, deep dive); business English inside a non-English target always counts as jargon. The subject's own technical vocabulary stays and is not explained (in software: function, class, branch, commit, test, API, token), and a metric name such as KPI may stay in an otherwise plain sentence. A replaced word keeps its exact meaning. Names, code identifiers, commands, paths, URLs, settings, error messages, and fenced code are copied exactly.
 - It uses short sentences and common words, no preamble, recap, pleasantries, or filler, no em dashes, and bold only for the few words the reader must not miss.
 
 ## Benchmark guidance
