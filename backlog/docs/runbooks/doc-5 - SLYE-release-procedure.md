@@ -3,7 +3,7 @@ id: doc-5
 title: SLYE release procedure
 type: guide
 created_date: '2026-08-15 17:48'
-updated_date: '2026-10-22 14:21'
+updated_date: '2026-10-22 16:14'
 ---
 # SLYE release procedure
 
@@ -13,9 +13,51 @@ Release Please reads Conventional Commits on `main`. Use `fix:` for a patch rele
 
 A releasable commit causes Release Please to open or update a release PR. Merge that PR to create the stable `vX.Y.Z` tag and GitHub Release. Only a created release sends the repository dispatch event, which starts `publish.yml` at that exact tag and publishes it to npm as `latest`. Creating or updating a release PR does not publish anything.
 
-## One-time GitHub Actions setting
+## One-time GitHub App setup
 
-Keep the repository's default workflow permissions read-only. In Settings > Actions > General, enable “Allow GitHub Actions to create and approve pull requests” so Release Please can create its release PR with `GITHUB_TOKEN`. This broader checkbox is used only for PR creation here; each workflow still declares its least required permissions.
+Authentication and merge-policy rationale: [decision-7](../../decisions/decision-7%20-%20Use-a-repository-scoped-GitHub-App-and-require-green-CI-on-main.md).
+
+Release Please uses the private [slye-release-wtfzambo App](https://github.com/settings/apps/slye-release-wtfzambo), [installed](https://github.com/settings/installations/174183288) only on `wtfzambo/speak-like-you-eat`. Keep repository workflow defaults read-only and leave external-contributor approval settings unchanged. The previously enabled **Allow GitHub Actions to create and approve pull requests** setting may stay as-is; this workflow no longer relies on it, because its native token has no Issues or Pull requests write permission.
+
+1. Register a private App under the repository owner's account, with webhooks disabled. Grant repository **Contents**, **Issues**, and **Pull requests** read/write permissions only; GitHub supplies the mandatory metadata read permission. No account permissions are needed.
+2. Install it on **Only select repositories**, selecting `speak-like-you-eat` only.
+3. Save its client ID as the repository Actions variable `RELEASE_APP_CLIENT_ID` and a generated PEM private key as the repository Actions secret `RELEASE_APP_PRIVATE_KEY`:
+
+```sh
+gh variable set RELEASE_APP_CLIENT_ID --repo wtfzambo/speak-like-you-eat --body "$APP_CLIENT_ID"
+gh secret set RELEASE_APP_PRIVATE_KEY --repo wtfzambo/speak-like-you-eat < /path/to/private-key.pem
+```
+
+Keep private keys out of Git, task notes, screenshots, shell arguments, and logs. Upload the file through standard input, then remove the temporary local copy. To rotate the key, generate a replacement in the App settings, replace the repository secret, verify authentication, then revoke the old key.
+
+`release.yml` creates a short-lived current-repository installation token with `actions/create-github-app-token` and passes it only to Release Please. The action revokes its token at job completion. Missing App configuration is an error; there is no silent fallback to `GITHUB_TOKEN`. The existing exact-tag publication dispatch still uses `GITHUB_TOKEN`, and npm publication still uses OIDC, not an npm token.
+
+## Require green CI before merging
+
+The repository ruleset declared in `.github/main-ruleset.json` targets `refs/heads/main`. It requires a PR and the `check` status from the GitHub Actions integration (`15368`, not the release App ID), with the branch up to date with `main`. There are no bypass actors, including administrators and the release App, and no mandatory second-person review. Merge remains manual; neither this ruleset nor App setup enables auto-merge.
+
+The active repository rule is [25653617](https://github.com/wtfzambo/speak-like-you-eat/rules/25653617). Inspect or update that existing rule through the GitHub API, rather than creating duplicates. Before any PUT, compare the file with the live ruleset and reconcile its name, branch scope, every rule, and all bypass actors, including changes made in the UI: PUT replaces the supplied configuration rather than merging it, so omitted protections can be lost.
+
+```sh
+RULESET_ID=25653617
+gh api repos/wtfzambo/speak-like-you-eat/rulesets
+gh api "repos/wtfzambo/speak-like-you-eat/rulesets/$RULESET_ID"
+# To update the existing rule:
+gh api --method PUT "repos/wtfzambo/speak-like-you-eat/rulesets/$RULESET_ID" --input .github/main-ruleset.json
+```
+
+The JSON file alone does not activate protection. Inspect the returned rule's enforcement, target branch, required check integration, strict up-to-date policy, empty bypass list, and zero review requirement. Verify on a non-draft PR that `gh pr view "$PR_NUMBER" --repo wtfzambo/speak-like-you-eat --json headRefOid,mergeStateStatus,mergeable,statusCheckRollup` reports `BLOCKED` while the required check is pending or failed, and `CLEAN` with `MERGEABLE` after the current-head check passes. Record those states and head SHAs; do not merge a disposable verification PR merely to prove the rule.
+
+To re-derive the required check identity, set `PR_NUMBER` to a recent PR with a successful check and inspect its head commit:
+
+```sh
+PR_HEAD_SHA=$(gh pr view "$PR_NUMBER" --repo wtfzambo/speak-like-you-eat --json headRefOid --jq .headRefOid)
+gh api "repos/wtfzambo/speak-like-you-eat/commits/$PR_HEAD_SHA/check-runs" --jq '.check_runs[] | select(.name == "check") | {name, integration_id: .app.id, integration: .app.slug}'
+```
+
+For ordinary red CI, fix the PR or rerun a transient failure. If a release PR is behind `main`, use its **Update branch** button and wait for the new check. Release Please may leave an unchanged release branch untouched after a docs-only main commit; do not assume rerunning Release Please will bring that branch up to date. If App authentication fails, inspect `gh variable list --repo wtfzambo/speak-like-you-eat` and `gh secret list --repo wtfzambo/speak-like-you-eat` for the configured names, then check the linked installation and App settings (App ID `5428791`, distinct from the required GitHub Actions integration). Recover the public client ID from the variable or App settings; secret values cannot be retrieved, so replace a missing or invalid private key using the setup and rotation steps above. Do not substitute a personal token or approve workflows automatically. If an intentional check rename or provider change makes the required status impossible to satisfy, review the new status identity, update `.github/main-ruleset.json` to require that actual check, and apply the update to the existing ruleset before merging the matching configuration PR. Retain active enforcement, the PR requirement, strict up-to-date checks, and the empty bypass list; never disable protection just to land a change.
+
+For App verification, create a disposable same-repository PR using an App installation token and confirm that the normal `pull_request` run starts without approval. Check the run's event, head SHA, actor, and result, then close the verification PR and remove its temporary branch. Such a check verifies the token/CI boundary without creating a release or publishing a package. Do not weaken the ruleset or approve workflows automatically as a workaround.
 
 ## One-time npm trusted publisher setup
 
