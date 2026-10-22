@@ -1,11 +1,11 @@
 ---
 id: TASK-21
 title: Add ELI5 and Light tabs to the SLYE companion card on Pi
-status: In Progress
+status: Done
 assignee:
   - '@zambo'
 created_date: '2026-10-20 15:56'
-updated_date: '2026-10-22 15:06'
+updated_date: '2026-10-22 15:28'
 labels:
   - feature
 dependencies:
@@ -33,15 +33,15 @@ Superseded on 2026-10-21: the second version is now ELI5 (an ADHD-friendly reorg
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 On Pi, an eligible rewrite makes two parallel calls (Light with the selected prompt, ELI5 with the built-in ELI5 prompt) and appends one card holding both texts
-- [ ] #2 The card shows ELI5 and Light tabs on its heading line; ELI5 is active by default and the active tab is highlighted
-- [ ] #3 Clicking a tab label in fullscreen selects it; ctrl+\ toggles the tab in fullscreen and regular mode; the choice applies to all cards and is not persisted
-- [ ] #4 If either call fails or is cancelled, no card is appended and a manual retry remains possible
-- [ ] #5 A custom slye-prompt.md replaces only the Light prompt
-- [ ] #6 Cards created before this change render without tabs; OMP behavior is unchanged
-- [ ] #7 The card background is the theme customMessageBg with halved saturation, readable in light and dark themes
-- [ ] #8 ELI5 output leads with the main point, numbers steps, moves side topics last, and replaces jargon (including English business terms in non-English text) with plain words, preserving the content required by the specification while allowing redundant evidence and secondary detail to be cut, on real responses with the configured model
-- [ ] #9 Spec, README, runbooks doc-2 and doc-6 and decision-6 describe the behavior; tests cover the criteria above; npm run check passes
+- [x] #1 On Pi, an eligible rewrite makes two parallel calls (Light with the selected prompt, ELI5 with the built-in ELI5 prompt) and appends one card holding both texts
+- [x] #2 The card shows ELI5 and Light tabs on its heading line; ELI5 is active by default and the active tab is highlighted
+- [x] #3 Clicking a tab label in fullscreen selects it; ctrl+\ toggles the tab in fullscreen and regular mode; the choice applies to all cards and is not persisted
+- [x] #4 If either call fails or is cancelled, no card is appended and a manual retry remains possible
+- [x] #5 A custom slye-prompt.md replaces only the Light prompt
+- [x] #6 Cards created before this change render without tabs; OMP behavior is unchanged
+- [x] #7 The card background is the theme customMessageBg with halved saturation, readable in light and dark themes
+- [x] #8 ELI5 output leads with the main point, numbers steps, moves side topics last, and replaces jargon (including English business terms in non-English text) with plain words, preserving the content required by the specification while allowing redundant evidence and secondary detail to be cut, on real responses with the configured model
+- [x] #9 Spec, README, runbooks doc-2 and doc-6 and decision-6 describe the behavior; tests cover the criteria above; npm run check passes
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -55,7 +55,7 @@ Current plan, 2026-10-22 (replaces superseded unslop-only / older-Pi plans; hist
 4. Evidence and user docs: README model ranking across both tabs (Haiku, Luna, DeepSeek, Gemma); current spec doc-1; runbooks doc-2/doc-5/doc-6; decision-6 rationale. Manual trials are observations, not semantic guarantees; retain their limitations. Keep local .pandino reviewer assignment aligned with corrected .pi agent pins; whole Pandino upgrade deferred.
 5. Complete docs-review corrections without prompt changes, then taste/spec together on correction diff. Resolve or explicitly discuss each must-fix before commit. Operator authorized a one-sentence direct correction to decision-6 on 2026-10-22 because CLI has no decision update command; correction applied.
 6. Independently verify npm run check, npm run check:omp-load with OMP installed, npm pack --dry-run --json (16 files), and integrated path. Final review completed on GPT-6.1 Sol against main...cf71a7d; resolve its open acceptance gates without rerunning the whole-branch review. No push, PR, merge or release without separate authorization.
-7. Remaining acceptance: operator light/dark readability and final live-quality acceptance; TASK-21 remains In Progress until evidence supports acceptance.
+7. Acceptance completed: operator confirmed live behavior/quality and retained existing light/dark appearance; intentional pruning policy explicitly accepted. All criteria verified and TASK-21 closed after final no-call release gates. Push/PR authorized; merge and publication remain separately gated.
 
 Operator-approved final-review test follow-up (2026-10-22, now implemented and verified): add one focused regression beside the existing sibling-success cancellation test in test/display.test.ts. Light fails first, ELI5 stays pending until cancellation, asserting no card/no warning and a successful manual retry on the same extension. Reuse existing harness and cancellation synchronization pattern. Change no production code or prompt. Run targeted display tests and npm run check; paired taste/spec before a test-only commit. Whole-branch final review has already run once.
 <!-- SECTION:PLAN:END -->
@@ -98,4 +98,24 @@ Operator explicitly accepted the ELI5 pruning policy on 2026-10-22: redundant ev
 Operator also explicitly authorized the extra mixed failure/cancellation regression on 2026-10-22 while preparing live UI checks.
 
 Mixed failure/cancellation regression implemented in test/display.test.ts: Light fails and settles before pending ELI5 is cancelled; no card/no warning/working status clears; manual retry on same extension makes two completions, appends one card and emits no notification. Paired taste 472b4ccf-9aac-48e and spec 19fc1899-2e57-4e4: no must-fix. Kept readable duplication and setImmediate precondition rather than extracting a helper; retained signal-count guard to show first failure settled rather than both requests cancelling. Added explicit silent-retry assertion from spec minor. Orchestrator reran npm run check: 139/139, Biome/tsc clean, git diff --check clean. No production/prompt changes, no new whole-branch final review needed. Operator accepted pruning policy and AC8 wording is reconciled; live light/dark/readability and final ELI5-quality acceptance still pending. No other agents remain running.
+
+Operator withdrew the light-theme contrast change on 2026-10-22 after further inspection: existing appearance works as-is and should stay. Only read-only screenshot/theme investigation had run; git diff confirmed no src/tabs.ts or test changes to revert, and no implementation agent for contrast had been launched. Existing rendering and prompts remain unchanged.
+
+Final acceptance and pre-PR verification 2026-10-22:
+- AC1: automated two-prompt/two-call payload and persistence tests, plus final reviewer full manual path trace through Promise.all to one append.
+- AC2/AC3: tab rendering/default/highlight/shared-state tests, prior real Pi 1.3.0 PTY click/shortcut checks in fullscreen and regular modes, and operator live confirmation that feature works.
+- AC4: failure/cancellation/retry tests, including committed mixed failure/cancellation regression bd83c6f; tests prove no card/no warning and successful manual retry.
+- AC5: custom-prompt routing tests confirm only Light receives selected custom system prompt.
+- AC6: legacy-card and OMP adapter tests, real installed OMP load check passes; OMP remains single Light call, no tabs/shortcut.
+- AC7: half-saturation test, real Pi theme probes, operator live light/dark inspection and explicit withdrawal of contrast change in favor of existing rendering. No color changes made.
+- AC8: manual real-model trials and operator live quality acceptance. Operator explicitly accepted removal of redundant evidence/secondary detail, reconciling AC8 wording; these trials are not a universal preservation guarantee.
+- AC9: spec/README/runbooks/decision aligned, branch docs review and per-commit reviews settled, final review on actual GPT-6.1 Sol found no new code defect, its acceptance blockers resolved.
+- Fresh pre-PR gates: npm ci; npm run check (139/139, Biome/tsc clean); npm run check:omp-load with installed OMP; both benchmark dry-runs; tracked manifest diff clean; npm pack --dry-run --json (16 files); doc-2 isolated tarball installation and pi list smoke passed at current package version 1.4.1; temporary directories removed. No paid provider/benchmark calls or personal configuration changes.
+- main matches origin/main at a22ee27; no preexisting feature PR found. User authorized continuity update then continuing through push/PR; merge/release remain separate authorizations. TASK-2 was updated first as requested; its snapshot explicitly describes pre-finalization state and directs readers to this task/Git/PR for subsequent results.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented Pi ELI5/Light companion tabs with two parallel completions on one configured model, default ELI5, fullscreen clicks/ctrl+\ and shared tab state; preserved legacy cards and OMP single-Light behavior. Built-in ELI5 prompt uses author voice, fixed structure and plain language, with fenced-example preservation guidance and explicitly accepted secondary-detail pruning. Current specs/runbooks/model recommendations and local reviewer pins are aligned. Verified by 139 tests, Biome/tsc, installed OMP loading, unchanged benchmark dry-run manifests, 16-file package and isolated tarball install/list smoke; operator accepted live behavior, quality and existing light/dark appearance. Docs/per-commit/final reviews complete, with final-review test gap addressed. Ready for feature PR, not yet merged or published.
+<!-- SECTION:FINAL_SUMMARY:END -->
