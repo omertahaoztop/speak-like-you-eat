@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.5.0](https://github.com/wtfzambo/speak-like-you-eat/compare/v1.4.1...v1.5.0) (2026-10-22)
+
+
+### Features
+
+* add ELI5 and Light tabs to Pi companions ([875090f](https://github.com/wtfzambo/speak-like-you-eat/commit/875090f20913474a48146a70dd3256a386df4347))
+* add Rewrite and Simple tabs to the SLYE card on Pi ([62377f7](https://github.com/wtfzambo/speak-like-you-eat/commit/62377f735e87b52d826420a07547a4272c04dce4))
+* keep code blocks in SLYE's ELI5 rewrite ([a17c22b](https://github.com/wtfzambo/speak-like-you-eat/commit/a17c22b5289bfebb2a632ee4330a127fa5d38064))
+* make SLYE's ELI5 tab rebuild the answer in a fixed order ([7a80e76](https://github.com/wtfzambo/speak-like-you-eat/commit/7a80e76be09e6078893744672442181442ffc977))
+* make SLYE's ELI5 tab speak in the author's plain voice ([61af347](https://github.com/wtfzambo/speak-like-you-eat/commit/61af347ba7ae01b27e4c1d18dc2922e795c68538))
+* make SLYE's ELI5 tab use plain words without jargon ([e5ec51c](https://github.com/wtfzambo/speak-like-you-eat/commit/e5ec51c0b78c6c624e10fbc118171ad6fb7eebfd))
+* turn the second SLYE tab into an ELI5 rewrite ([4c117b7](https://github.com/wtfzambo/speak-like-you-eat/commit/4c117b73aca378e0ff345d3385682d284c2fba4c))
+
 ## [1.4.1](https://github.com/wtfzambo/speak-like-you-eat/compare/v1.4.0...v1.4.1) (2026-10-20)
 
 
