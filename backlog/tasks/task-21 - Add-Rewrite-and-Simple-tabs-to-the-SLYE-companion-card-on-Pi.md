@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-20 15:56'
-updated_date: '2026-10-22 14:51'
+updated_date: '2026-10-22 14:53'
 labels:
   - feature
 dependencies:
@@ -86,4 +86,6 @@ Docs review follow-up 2026-10-22: corrected corpus size (10 targets: 8 real, 2 s
 Docs-correction per-commit reviews completed on DeepSeek V4.1 Flash: taste e8833ca8-7397-450 and spec 6da9c72f-ca11-422. Addressed readability must-fixes by listing CI commands and removing trial metrics from current spec (metrics stay here). Clarified retired benchmark table, OMP gate rationale, reminders, and denominator repetitions. Spec reviewer labelled provider-call counts possible extra scope; rejected that finding because correction mandate item 3 explicitly required counts for step 5. Counts describe existing two-call behavior, not a new budget or product rule. decision-6 phrase remains awaiting operator exception; no commit or final review yet.
 
 Operator authorized the one-sentence direct decision-6 correction on 2026-10-22; applied without changing metadata, filenames, prompts, code or tests. Docs-review must-fixes resolved, taste/spec readability must-fixes resolved, targeted wording nits addressed. Independent checks after corrections: npm run check 138/138, installed OMP load check passes, npm pack dry-run 16 files, git diff --check clean. Committing this correction slice before the once-per-branch final review; TASK-21 remains In Progress and no push/PR/release is authorized.
+
+Operator selected GPT-6.1 Sol (or Astra) for the final review on 2026-10-22 before it launched. Selected available openai/gpt-6.1-sol; aligned .pi/agents/final-reviewer.md and .pandino/models.json so this is the actual configured pin, not a silent fallback or spawn override. Docs corrections committed as 8419a83; decision-6 direct one-sentence exception was explicitly authorized. Final review will inspect the whole branch against main; no previous final review has run on this feature branch.
 <!-- SECTION:NOTES:END -->
