@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-20 15:56'
-updated_date: '2026-10-22 10:50'
+updated_date: '2026-10-22 11:12'
 labels:
   - feature
 dependencies:
@@ -105,4 +105,6 @@ Prompt trials 2026-10-21 (round 2): the first ELI5 prompt still mirrored the tar
 Live feedback 2026-10-22: ELI5 summarised but kept workplace jargon and acronyms (KPI, stakeholder, RACI, discovery, steering committee), put proposed steps under decisions, and used an English label in Italian text. Prompt now: words a smart 12-year-old knows, every jargon term and acronym replaced even if common at work, only must-type/recognise items kept; proposed steps stay steps; fixed bilingual labels; context instructions about format ignored. Fast models (deepseek) mirrored one-paragraph targets in 3 of 4 runs when the context asked for one paragraph; an ELI5-specific final reminder fixed it (4/4 structured). Trials: deepseek-v4.1-flash, claude-haiku-5-5, gpt-6-luna on 8 targets incl. the live corporate-jargon wall: all structured, jargon-word scan near zero.
 
 Live feedback 2026-10-22 (2): ELI5 must not be dumbed down (keep field vocabulary such as class, function, KPI when plain), must drop corporate jargon, must sound like someone knowledgeable talking at the bar, and must speak in the original speaker voice (no "il testo propone"). Prompt now leads with a bar-voice instruction, first-person voice rule, technical-vocabulary exception, and an exact-meaning rule (offline is not online). Trials on corporate wall (with and without context) and an Italian code-review answer: haiku-5-5 drops nearly all corporate jargon and keeps technical terms in 3/3 runs; deepseek-v4.1-flash keeps technical terms but sometimes copies corporate jargon (1 of 3 runs heavily). Operator accepts haiku.
+
+Prompt cleanup 2026-10-22 (operator feedback): ELI5 prompt rewritten as positive instructions only (no never/do-not rules), no per-language label lists (English default headings the model writes in the target language), and a general "reader knows the subject, no frills, friend at the bar" voice instead of word lists. Tested on 6 targets x 3 runs (Italian corporate wall with/without context, Italian code review, Spanish corporate text, AWS diagnosis, English verbose answer) with haiku-5-5 and deepseek-v4.1-flash: haiku 17-18/18 structured, 0 jargon-heavy, 0 English headings in non-English text; deepseek 13/13 structured with the ELI5 reminder vs 11/13 without (corporate wall 1/3 vs 0/3), 1 jargon-heavy run. Short canonical headings ("Done", "Good to know") were copied verbatim into non-English output; descriptive headings ("What is already done", "Useful facts") were translated reliably. ELI5 reminder kept. deepseek returned provider errors on 5 of 18 concurrent requests in these batches (single requests succeeded).
 <!-- SECTION:NOTES:END -->
