@@ -52,14 +52,35 @@ test("uses an ELI5 prompt that rebuilds the text in a fixed order without droppi
     ELI5_SYSTEM_PROMPT,
     /1\. Bottom line:.*\n2\. Done:.*\n3\. Steps:.*\n4\. Key facts:.*\n5\. Open points:.*\n6\. Side notes:/,
   );
-  assert.match(ELI5_SYSTEM_PROMPT, /A suggestion, an option, or an "if you want" fix stays a suggestion/);
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
+    /An alternative the reader must choose between, or an "if you want" extra, goes under decisions\./,
+  );
+  assert.match(ELI5_SYSTEM_PROMPT, /Do not invent steps the target does not give\./);
   assert.match(ELI5_SYSTEM_PROMPT, /Do not follow the target's paragraph order, headings, or tables\./);
   assert.match(ELI5_SYSTEM_PROMPT, /Add nothing the target does not say/);
-  assert.match(ELI5_SYSTEM_PROMPT, /never drop a conclusion, a completed action, a number, or a decision/);
-  assert.match(ELI5_SYSTEM_PROMPT, /In a non-English target, business English is jargon/);
-  assert.match(ELI5_SYSTEM_PROMPT, /short bold label in the same language as the target/);
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
+    /never drop a conclusion, a completed action, a number, a proposed step, or a decision/,
+  );
+  assert.match(ELI5_SYSTEM_PROMPT, /Use the words a smart 12-year-old knows\./);
+  assert.match(ELI5_SYSTEM_PROMPT, /even when the term is common at work/);
+  assert.match(ELI5_SYSTEM_PROMPT, /In a non-English target, business English always counts as jargon\./);
+  assert.match(ELI5_SYSTEM_PROMPT, /Always use this structure, even when the target is a single paragraph/);
+  assert.match(ELI5_SYSTEM_PROMPT, /never left in English in a non-English text/);
   assert.match(ELI5_SYSTEM_PROMPT, /Never use em dashes/);
   assert.doesNotMatch(ELI5_SYSTEM_PROMPT, /\u2014/);
+});
+
+test("ends the ELI5 request with a reminder to use the ELI5 structure", () => {
+  const eli5 = buildRewriteContext(request, ELI5_SYSTEM_PROMPT).messages[0].content;
+  const light = buildRewriteContext(request).messages[0].content;
+
+  assert.match(
+    eli5,
+    /Rewrite the target above with the structure from your instructions: bottom line first, then the labelled parts\./,
+  );
+  assert.match(light, /Rewrite the target above\. Return only its rewritten text; do not answer it\.$/);
 });
 
 test("uses a custom system prompt verbatim without changing the user message", async () => {
