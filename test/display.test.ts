@@ -716,6 +716,53 @@ test("cancels one tab rewrite while the other succeeds without a warning", async
   assert.equal(extension.appendedEntries.length, 1);
 });
 
+test("cancellation takes precedence when Light fails and ELI5 remains pending", async (t) => {
+  const directory = await setupConfiguredDirectory(t, true);
+  const target = longAssistant();
+  const branch = [entry("user", user("please explain")), entry("target", target)];
+  const userController = new AbortController();
+  const requestSignals: AbortSignal[] = [];
+  let calls = 0;
+  let resolveStarted: (() => void) | undefined;
+  const started = new Promise<void>((resolve) => {
+    resolveStarted = resolve;
+  });
+  const extension = createExtension();
+  const { context, notifications, workingMessages } = createContext({
+    cwd: directory,
+    branch,
+    signal: userController.signal,
+    complete(_model, request, options) {
+      calls += 1;
+      requestSignals.push(options.signal);
+      if ((request as { systemPrompt: string }).systemPrompt === ELI5_SYSTEM_PROMPT) {
+        resolveStarted?.();
+        return new Promise(() => undefined);
+      }
+      return Promise.reject(new Error("Simple failed"));
+    },
+  });
+
+  const completed = extension.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, context);
+  await started;
+  // Let the Light failure settle before cancellation aborts only the pending ELI5 request.
+  await new Promise<void>((resolve) => setImmediate(resolve));
+  userController.abort();
+  await completed;
+
+  assert.equal(calls, 2);
+  assert.equal(requestSignals.filter((signal) => signal.aborted).length, 1);
+  assert.deepEqual(extension.appendedEntries, []);
+  assert.deepEqual(notifications, []);
+  assert.deepEqual(workingMessages, ["Rewriting AI-speak…", undefined]);
+
+  const retried = createContext({ cwd: directory, branch });
+  await extension.command.handler("", retried.context);
+  assert.equal(retried.completionCalls, 2);
+  assert.equal(extension.appendedEntries.length, 1);
+  assert.deepEqual(retried.notifications, []);
+});
+
 test("provider, non-stop, and empty failures leave the original alone and warn once", async (t) => {
   const directory = await setupConfiguredDirectory(t, true);
   const extension = createExtension();

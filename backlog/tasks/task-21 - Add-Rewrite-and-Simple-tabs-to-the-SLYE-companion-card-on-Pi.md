@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-20 15:56'
-updated_date: '2026-10-22 14:53'
+updated_date: '2026-10-22 15:06'
 labels:
   - feature
 dependencies:
@@ -40,7 +40,7 @@ Superseded on 2026-10-21: the second version is now ELI5 (an ADHD-friendly reorg
 - [ ] #5 A custom slye-prompt.md replaces only the Light prompt
 - [ ] #6 Cards created before this change render without tabs; OMP behavior is unchanged
 - [ ] #7 The card background is the theme customMessageBg with halved saturation, readable in light and dark themes
-- [ ] #8 ELI5 output leads with the main point, numbers steps, moves side topics last, and replaces jargon (including English business terms in non-English text) with plain words, without dropping facts, on real responses with the configured model
+- [ ] #8 ELI5 output leads with the main point, numbers steps, moves side topics last, and replaces jargon (including English business terms in non-English text) with plain words, preserving the content required by the specification while allowing redundant evidence and secondary detail to be cut, on real responses with the configured model
 - [ ] #9 Spec, README, runbooks doc-2 and doc-6 and decision-6 describe the behavior; tests cover the criteria above; npm run check passes
 <!-- AC:END -->
 
@@ -54,8 +54,10 @@ Current plan, 2026-10-22 (replaces superseded unslop-only / older-Pi plans; hist
 3. Built-in ELI5 prompt: same author voice and main language, fixed bottom-line/done/steps/facts/decisions/other order, plain language with normal technical vocabulary, positive instructions and native-language headings. Aim for half length by pruning redundant evidence and secondary detail. Preserve specified actionable content and fenced examples; allow one-line commands inline and evidentiary output/logs omitted. Leave Light prompt unchanged.
 4. Evidence and user docs: README model ranking across both tabs (Haiku, Luna, DeepSeek, Gemma); current spec doc-1; runbooks doc-2/doc-5/doc-6; decision-6 rationale. Manual trials are observations, not semantic guarantees; retain their limitations. Keep local .pandino reviewer assignment aligned with corrected .pi agent pins; whole Pandino upgrade deferred.
 5. Complete docs-review corrections without prompt changes, then taste/spec together on correction diff. Resolve or explicitly discuss each must-fix before commit. Operator authorized a one-sentence direct correction to decision-6 on 2026-10-22 because CLI has no decision update command; correction applied.
-6. Independently verify npm run check, npm run check:omp-load with OMP installed, npm pack --dry-run --json (16 files), and integrated path. After per-commit passes, final-reviewer once against main merge base. No push, PR, merge or release without separate authorization.
+6. Independently verify npm run check, npm run check:omp-load with OMP installed, npm pack --dry-run --json (16 files), and integrated path. Final review completed on GPT-6.1 Sol against main...cf71a7d; resolve its open acceptance gates without rerunning the whole-branch review. No push, PR, merge or release without separate authorization.
 7. Remaining acceptance: operator light/dark readability and final live-quality acceptance; TASK-21 remains In Progress until evidence supports acceptance.
+
+Operator-approved final-review test follow-up (2026-10-22, now implemented and verified): add one focused regression beside the existing sibling-success cancellation test in test/display.test.ts. Light fails first, ELI5 stays pending until cancellation, asserting no card/no warning and a successful manual retry on the same extension. Reuse existing harness and cancellation synchronization pattern. Change no production code or prompt. Run targeted display tests and npm run check; paired taste/spec before a test-only commit. Whole-branch final review has already run once.
 <!-- SECTION:PLAN:END -->
 
 ## Implementation Notes
@@ -88,4 +90,12 @@ Docs-correction per-commit reviews completed on DeepSeek V4.1 Flash: taste e8833
 Operator authorized the one-sentence direct decision-6 correction on 2026-10-22; applied without changing metadata, filenames, prompts, code or tests. Docs-review must-fixes resolved, taste/spec readability must-fixes resolved, targeted wording nits addressed. Independent checks after corrections: npm run check 138/138, installed OMP load check passes, npm pack dry-run 16 files, git diff --check clean. Committing this correction slice before the once-per-branch final review; TASK-21 remains In Progress and no push/PR/release is authorized.
 
 Operator selected GPT-6.1 Sol (or Astra) for the final review on 2026-10-22 before it launched. Selected available openai/gpt-6.1-sol; aligned .pi/agents/final-reviewer.md and .pandino/models.json so this is the actual configured pin, not a silent fallback or spawn override. Docs corrections committed as 8419a83; decision-6 direct one-sentence exception was explicitly authorized. Final review will inspect the whole branch against main; no previous final review has run on this feature branch.
+
+Final review completed 2026-10-22: 9576ae04-4ae9-447, actual model confirmed in session log as openai/gpt-6.1-sol. Reviewed main...cf71a7d; verdict merge after fixes, no new composition/end-to-end code defect. Must-fix acceptance gates: explicit operator reconciliation of AC8 “without dropping facts” with intentional pruning of redundant evidence/secondary detail, plus operator light/dark readability and final live ELI5-quality acceptance. Minor: add mixed sibling failure/cancellation regression (no card, no warning, later manual retry); not yet implemented. Independent reviewer evidence: 138 tests/Biome/tsc clean, real Pi CustomEntryComponent in-memory light/dark probes, real SessionManager persistence round-trip preserved both texts and excluded both from model context. No paid provider/benchmark calls by reviewer. All agents now completed. No acceptance criteria changed or checked; TASK-21 remains In Progress. No push/PR/merge/release authorization.
+
+Operator explicitly accepted the ELI5 pruning policy on 2026-10-22: redundant evidence and secondary detail may be cut while conclusions, actions, decisions and other content required by the specification stay. Reconciled AC8 wording accordingly; no criterion checked and no prompt change. Operator is now performing live theme/readability and ELI5-quality checks; these remain pending.
+
+Operator also explicitly authorized the extra mixed failure/cancellation regression on 2026-10-22 while preparing live UI checks.
+
+Mixed failure/cancellation regression implemented in test/display.test.ts: Light fails and settles before pending ELI5 is cancelled; no card/no warning/working status clears; manual retry on same extension makes two completions, appends one card and emits no notification. Paired taste 472b4ccf-9aac-48e and spec 19fc1899-2e57-4e4: no must-fix. Kept readable duplication and setImmediate precondition rather than extracting a helper; retained signal-count guard to show first failure settled rather than both requests cancelling. Added explicit silent-retry assertion from spec minor. Orchestrator reran npm run check: 139/139, Biome/tsc clean, git diff --check clean. No production/prompt changes, no new whole-branch final review needed. Operator accepted pruning policy and AC8 wording is reconciled; live light/dark/readability and final ELI5-quality acceptance still pending. No other agents remain running.
 <!-- SECTION:NOTES:END -->
