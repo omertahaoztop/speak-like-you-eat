@@ -1,7 +1,7 @@
 {
   "pi": {
     "implementer": "openai-codex/gpt-5.6-terra",
-    "reviewer": "ollama-cloud/deepseek-v4-flash:0731",
+    "reviewer": "ollama-cloud/deepseek-v4.1-flash",
     "final": "anthropic/claude-opus-5"
   }
 }

@@ -3,7 +3,7 @@ id: doc-5
 title: SLYE release procedure
 type: guide
 created_date: '2026-08-15 17:48'
-updated_date: '2026-08-15 17:54'
+updated_date: '2026-10-22 14:21'
 ---
 # SLYE release procedure
 
@@ -29,7 +29,15 @@ After a successful trusted-publishing verification, use npm package Settings > P
 
 ## Workflow requirements and normal release verification
 
-npm trusted publishing requires Node 22.14.0 or newer and npm 11.5.1 or newer. The publish workflow uses Node 24 and pins npm 11.19.0. Before publishing, it confirms the GitHub Release tag exactly matches the validated stable tag and that the release is neither a draft nor a prerelease. It also checks the tag commit's ancestry on `main`, package and lockfile versions, the full no-call test gates, and the package artifact before `npm publish --access public --tag latest`.
+npm trusted publishing requires Node 22.14.0 or newer and npm 11.5.1 or newer. The publish workflow uses Node 24 and pins npm 11.19.0. Before publishing, it confirms the GitHub Release tag exactly matches the validated stable tag and that the release is neither a draft nor a prerelease. It also checks the tag commit's ancestry on `main` and package and lockfile versions, then runs these CI gates:
+
+- `npm run check`
+- `npm run benchmark:dry-run`
+- `npm run benchmark:phase-2:dry-run`
+- `git diff --exit-code -- benchmark/manifest.json benchmark/phase-2-manifest.json`
+- `npm pack --dry-run --json`
+
+After these checks pass, it runs `npm publish --access public --tag latest`. The operator-only OMP load check is documented in the [sandbox manual checks](doc-2%20-%20SLYE-sandbox-manual-checks.md#slice-5--final-package-verification); it is not CI-enforced.
 
 After merging a release PR, verify the GitHub Release has the expected `vX.Y.Z` tag, then verify `npm view speak-like-you-eat@X.Y.Z version` and `npm view speak-like-you-eat dist-tags.latest`. Open that npm version's package page and verify its provenance points to this GitHub repository and release workflow. Trusted publishing generates provenance automatically for a public package from GitHub Actions.
 

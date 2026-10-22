@@ -24,6 +24,8 @@ pi install npm:speak-like-you-eat
 pi install -l npm:speak-like-you-eat
 ```
 
+Use the current Pi release; older Pi versions are not supported.
+
 ### Oh My Pi
 
 ```sh
@@ -47,7 +49,7 @@ omp plugin install speak-like-you-eat
 
 On Pi, each card holds two versions of the rewrite, shown as tabs on its heading line:
 
-- **ELI5** (active by default): rebuilds the answer for a reader who wants the point fast. It starts with the conclusion and what you need to do, then lists what was done, the steps, the key facts, and the open decisions, in plain spoken words without corporate jargon (technical terms stay), at about half the length, while keeping every fact. Adapted from the [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills.
+- **ELI5** (active by default): rebuilds the answer for a reader who wants the point fast. It starts with the conclusion and what you need to do, then lists what was done, the steps, the key facts, and the open decisions, in plain spoken words without corporate jargon (technical terms stay), at about half the length. The prompt asks it to keep conclusions, actions, and decisions while cutting redundant evidence and secondary detail; see the [Built-in ELI5 prompt](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md#built-in-eli5-prompt-pi) for the full preservation policy. Model output can vary. Adapted from the [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills.
 - **Light**: the lighter rewrite SLYE has always made, close to the original wording, or your custom prompt's output.
 
 Click a tab in fullscreen mode, or press `ctrl+\` in any mode, to switch. The choice applies to every card and resets when Pi restarts. On Pi each rewrite makes two provider requests, in parallel, so it costs about twice as much as one version. OMP shows only the Light version, without tabs.
@@ -60,19 +62,19 @@ To replace the built-in Light prompt with your own `slye-prompt.md`, follow [Cus
 
 ### Recommended models
 
-Use cheap-ish, fast models; SLYE sets reasoning for you. Both Pi tabs use the same model. In order:
+Use cheap-ish, fast models; SLYE sets reasoning for you. Both Pi tabs use the same model. These rankings are observations from a small manual trial on real and synthetic examples, not guarantees. In order:
 
-1. **Claude Haiku 5.5** - the best ELI5: it restructures well, drops jargon, keeps the facts and code examples, and roughly halves long answers. On Light it stays faithful and always keeps code intact, though some jargon survives.
-2. **GPT-6 Luna** - removes jargon best on Light and gives a good, short ELI5, but in both tabs it sometimes drops code examples or code comments.
-3. **DeepSeek V4.1 Flash** - the fastest. Light stays faithful to the original but keeps much of the jargon; ELI5 sometimes keeps jargon and drops code examples.
-4. **Gemma 4 31B** - plain and short in both tabs, but it cuts content and sometimes shifts the meaning; in ELI5 it drops most code blocks and occasionally adds a question.
+1. **Claude Haiku 5.5** - the best ELI5: it restructured well, dropped jargon, preserved code examples most reliably, and roughly halved long answers. On Light it stayed faithful and preserved code, though some jargon survived.
+2. **GPT-6 Luna** - removed jargon best on Light and gave a good, short ELI5, but in both tabs sometimes dropped code examples or code comments.
+3. **DeepSeek V4.1 Flash** - the fastest. Light stayed faithful to the original but kept much of the jargon; ELI5 sometimes kept jargon and dropped code examples.
+4. **Gemma 4 31B** - plain and short in both tabs, but cut content and sometimes shifted the meaning; in ELI5 it dropped most code blocks and occasionally added a question.
 
-These rankings come from a small manual trial on real answers; the scored [benchmark](backlog/docs/specs/doc-4%20-%20SLYE-benchmark-results.md) covers an earlier version of the Light prompt.
+The scored [benchmark](backlog/docs/specs/doc-4%20-%20SLYE-benchmark-results.md) is historical evidence for an earlier version of the Light prompt, not a current ranking.
 
 ## What SLYE guarantees
 
 - The original response stays visible and unchanged. The display-only card never enters LLM context.
-- SLYE's built-in Light prompt tells the model to preserve the target response's language and intentional language mix rather than translate it. The ELI5 prompt keeps the response's main language but may reorder it and change its Markdown structure. A custom prompt replaces those instructions for the Light version only. The ELI5 prompt replaces business jargon in other languages, such as English buzzwords in an Italian answer, with plain words in the answer's language.
+- SLYE's built-in Light prompt tells the model to preserve the target response's language and intentional language mix rather than translate it. The ELI5 prompt keeps the response's main language but may reorder it, change its Markdown structure, shorten it, and cut secondary detail or logs that only show how something was found. A custom prompt replaces those instructions for the Light version only. The ELI5 prompt replaces business jargon in other languages, such as English buzzwords in an Italian answer, with plain words in the answer's language.
 - Each target has at most one persistent companion card. Secondary provider requests (two on Pi, one on OMP) have their own cost and latency and happen only for an automatically eligible response or an eligible, not-yet-completed manual target.
 - Escape cancels a rewrite. Cancellation, timeout, and provider failures leave the original unchanged and permit a manual retry. Storage failures have [host-specific retry limitations](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md#interaction-and-failures).
 - SLYE sends an isolated payload to the selected model through the host's model registry. Apart from its explicit configuration and optional `slye-prompt.md`, it does not load project files, project instructions, skills, prompt templates, tools, or the full session history. Other extensions and provider-side processing are outside SLYE's control.

@@ -3,7 +3,7 @@ id: doc-4
 title: SLYE benchmark results
 type: specification
 created_date: '2026-08-14 17:23'
-updated_date: '2026-08-17 00:33'
+updated_date: '2026-10-22 14:22'
 ---
 # SLYE benchmark results
 
@@ -82,6 +82,8 @@ GPT-OSS 120B low's 4.033-second promoted mean was distorted by one 8.766-second 
 Prices are public OpenRouter snapshot comparative estimates only. Aggregate and candidate costs are sums of per-row usage priced with the frozen manifest snapshot. Actual Pi provider subscription, quota, and billing may differ. The evidence is directional, not universal: it comes from a small English-only corpus, one completion per fixture and configuration, human preference ratings, changing provider/model versions and latency, and a phase-two subset of only three fixtures and three configurations.
 
 ## Final recommendation
+
+These recommendations record the benchmark at its 2026-08-14 run date, not the current model ranking. `ollama-cloud/deepseek-v4-flash:0731` has since been retired; see the [current model guidance](doc-1%20-%20SLYE-MVP-specification.md#benchmark-guidance).
 
 | Priority | Model/config | Trade-off |
 | --- | --- | --- |
