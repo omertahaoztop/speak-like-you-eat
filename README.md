@@ -49,8 +49,10 @@ omp plugin install speak-like-you-eat
 
 On Pi, each card holds two versions of the rewrite, shown as tabs on its heading line:
 
-- **ELI5** (active by default): rebuilds the answer for a reader who wants the point fast. It starts with the conclusion and what you need to do, then lists what was done, the steps, the key facts, and the open decisions, in plain spoken words without corporate jargon (technical terms stay), at about half the length. The prompt asks it to keep conclusions, actions, and decisions while cutting redundant evidence and secondary detail; see the [Built-in ELI5 prompt](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md#built-in-eli5-prompt-pi) for the full preservation policy. Model output can vary. Adapted from the [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills.
+- **ELI5** (active by default): rebuilds the answer for a reader who wants the point fast. It starts with the conclusion and what you need to do, then lists what was done, the steps, the key facts, and the open decisions under their own headings, keeping tables as tables, in plain spoken words without corporate jargon (technical terms stay), at about half the length. The prompt asks it to keep conclusions, actions, and decisions while cutting redundant evidence and secondary detail; see the [Built-in ELI5 prompt](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md#built-in-eli5-prompt-pi) for the full preservation policy. Model output can vary. Adapted from the [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills.
 - **Light**: the lighter rewrite SLYE has always made, close to the original wording, or your custom prompt's output.
+
+The name of the model that made the card appears small on the right of its heading line, when the window is wide enough.
 
 Click a tab in fullscreen mode, or press `ctrl+\` in any mode, to switch. The choice applies to every card and resets when Pi restarts. On Pi each rewrite makes two provider requests, in parallel, so it costs about twice as much as one version. OMP shows only the Light version, without tabs.
 

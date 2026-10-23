@@ -17,6 +17,7 @@ import {
   initTheme,
   type SessionEntry,
 } from "@earendil-works/pi-coding-agent";
+import { visibleWidth } from "@earendil-works/pi-tui";
 import { writeConfigAtomically } from "../src/config.ts";
 import type { ThinkingLevel } from "../src/model-completion.ts";
 import speakLikeYouEatOmp from "../src/omp.ts";
@@ -371,19 +372,23 @@ test("loads through the OMP entry point, translates rendering, and filters rewri
   assert.equal(contextHandler({ messages: "invalid" }, {}), undefined);
 
   const rendered = runtime.renderer("slye.rewrite")(
-    { details: { display: "Saved Markdown", targetEntryId: "target" } },
+    { details: { display: "Saved Markdown", targetEntryId: "target", modelName: "Mock model" } },
     { expanded: false },
     renderTheme(),
   ) as { render(width: number): string[] } | undefined;
-  assert.match(rendered?.render(120).join("\n") ?? "", /🤌 Speak like you eat:/);
+  const heading = rendered?.render(120)[1] ?? "";
+  assert.equal(visibleWidth(heading), 120);
+  assert.ok(heading.endsWith("Mock model "));
+  assert.doesNotMatch(rendered?.render(30).join("\n") ?? "", /Mock model/);
   assert.match(rendered?.render(120).join("\n") ?? "", /Saved Markdown/);
 
   const compiledFallback = runtime.renderer("slye.rewrite")(
-    { details: { display: "Compiled OMP card", targetEntryId: "target" } },
+    { details: { display: "Compiled OMP card", targetEntryId: "target", modelName: "Mock model" } },
     { expanded: false },
     compiledOmpTheme(),
   ) as { render(width: number): string[] } | undefined;
   assert.match(compiledFallback?.render(120).join("\n") ?? "", /🤌 Speak like you eat:/);
+  assert.match(compiledFallback?.render(120).join("\n") ?? "", /Mock model/);
   assert.match(compiledFallback?.render(120).join("\n") ?? "", /Compiled OMP card/);
 });
 
@@ -1005,7 +1010,7 @@ function rewriteMessage(display: string, targetEntryId: string): SentMessage {
     customType: "slye.rewrite",
     content: "",
     display: true,
-    details: { display, targetEntryId },
+    details: { display, targetEntryId, modelName: "Mock model" },
     attribution: "agent",
   };
 }
@@ -1016,6 +1021,9 @@ function renderTheme(): unknown {
       return text;
     },
     bold(text: string) {
+      return text;
+    },
+    fg(_name: string, text: string) {
       return text;
     },
   };
@@ -1032,6 +1040,9 @@ function compiledOmpTheme(): unknown {
         firstBoldCall = false;
         throw new TypeError("undefined is not an object (evaluating 'theme.getColorMode')");
       }
+      return text;
+    },
+    fg(_name: string, text: string) {
       return text;
     },
   };

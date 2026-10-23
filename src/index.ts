@@ -19,7 +19,7 @@ import {
   writeConfigAtomically,
 } from "./config.ts";
 import { completeModel, lowestSupportedThinkingLevel, type ThinkingLevel } from "./model-completion.ts";
-import { formatModelCandidate, pickModel, selectModelCandidates } from "./model-picker.ts";
+import { formatModelCandidate, getModelDisplayName, pickModel, selectModelCandidates } from "./model-picker.ts";
 import { type CompleteRewrite, completeRewrite, ELI5_SYSTEM_PROMPT, type RewriteOutcome } from "./model-rewrite.ts";
 import { loadEffectivePrompt, PROMPT_FILENAME } from "./prompt.ts";
 import { type PreparedRewriteRequest, prepareManualRewriteRequest, prepareRewriteRequest } from "./rewrite.ts";
@@ -42,7 +42,7 @@ type SlyePaths = {
 
 type PiModel = NonNullable<ReturnType<ExtensionContext["modelRegistry"]["find"]>>;
 type UsableModel = { model: PiModel; thinkingLevel: ThinkingLevel };
-type RewriteEntryData = { display: string; rewrite?: string; targetEntryId?: string };
+type RewriteEntryData = { display: string; rewrite?: string; targetEntryId?: string; modelName?: string };
 type ManualTargetInspection =
   | { kind: "no-target" }
   | { kind: "duplicate"; prepared: PreparedRewriteRequest }
@@ -65,10 +65,10 @@ export default function speakLikeYouEat(pi: ExtensionAPI, options?: { tabs?: boo
     }
 
     if (!tabs) {
-      return buildLegacyCard(theme, data.display, (text) => theme.bg("customMessageBg", text));
+      return buildLegacyCard(theme, data.display, (text) => theme.bg("customMessageBg", text), data.modelName);
     }
     if (data.rewrite === undefined) {
-      return buildLegacyCard(theme, data.display, cardBackground(theme));
+      return buildLegacyCard(theme, data.display, cardBackground(theme), data.modelName);
     }
     return buildTabbedCard(
       theme,
@@ -78,6 +78,7 @@ export default function speakLikeYouEat(pi: ExtensionAPI, options?: { tabs?: boo
       (tab) => {
         activeTab = tab;
       },
+      data.modelName,
     );
   });
 
@@ -354,6 +355,7 @@ export default function speakLikeYouEat(pi: ExtensionAPI, options?: { tabs?: boo
         await pi.appendEntry<RewriteEntryData>(REWRITE_ENTRY_TYPE, {
           display: outcome.display,
           targetEntryId: prepared.entryId,
+          modelName: getModelDisplayName(model.model),
         });
         completedTargetEntryIds.add(prepared.entryId);
         return outcome;
@@ -374,6 +376,7 @@ export default function speakLikeYouEat(pi: ExtensionAPI, options?: { tabs?: boo
         display: simple.display,
         rewrite: rewrite.display,
         targetEntryId: prepared.entryId,
+        modelName: getModelDisplayName(model.model),
       });
       completedTargetEntryIds.add(prepared.entryId);
       return simple;
@@ -576,7 +579,11 @@ function parseRewriteEntryData(data: unknown): RewriteEntryData | undefined {
     "targetEntryId" in data && typeof data.targetEntryId === "string" && data.targetEntryId.trim() !== ""
       ? data.targetEntryId
       : undefined;
-  return { display: data.display, rewrite, targetEntryId };
+  const modelName =
+    "modelName" in data && typeof data.modelName === "string" && data.modelName.trim() !== ""
+      ? data.modelName
+      : undefined;
+  return { display: data.display, rewrite, targetEntryId, modelName };
 }
 
 function hasExistingRewrite(branch: readonly SessionEntry[], targetEntryId: string): boolean {

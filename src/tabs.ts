@@ -7,13 +7,19 @@ import { Box, type Component, Markdown, Text, visibleWidth } from "@earendil-wor
 
 const CARD_PADDING = 1;
 const CARD_HEADING = "🤌 Speak like you eat";
+const MIN_LABEL_GAP = 2;
 
 export type SlyeTab = "rewrite" | "simple";
 
 // Keep the legacy builder here so every host shares the one heading and padding.
-export function buildLegacyCard(theme: Theme, display: string, background: (text: string) => string): Box {
+export function buildLegacyCard(
+  theme: Theme,
+  display: string,
+  background: (text: string) => string,
+  modelName?: string,
+): Box {
   const box = new Box(CARD_PADDING, CARD_PADDING, background);
-  box.addChild(new Text(theme.bold(`${CARD_HEADING}:`), 0, 0));
+  box.addChild(buildHeadingLine(theme, theme.bold(`${CARD_HEADING}:`), modelName));
   box.addChild(new Markdown(display, 0, 1, getMarkdownTheme()));
   return box;
 }
@@ -24,9 +30,10 @@ export function buildTabbedCard(
   rewrite: string,
   getActiveTab: () => SlyeTab,
   selectTab: (tab: SlyeTab) => void,
+  modelName?: string,
 ): Component {
-  const rewriteBox = buildTabbedBox(theme, "rewrite", rewrite);
-  const simpleBox = buildTabbedBox(theme, "simple", simple);
+  const rewriteBox = buildTabbedBox(theme, "rewrite", rewrite, modelName);
+  const simpleBox = buildTabbedBox(theme, "simple", simple, modelName);
   const card: Component = {
     render(width) {
       return (getActiveTab() === "rewrite" ? rewriteBox : simpleBox).render(width);
@@ -59,14 +66,41 @@ export function cardBackground(theme: Theme): (text: string) => string {
   return (text) => theme.style(text, { bg: color });
 }
 
-function buildTabbedBox(theme: Theme, activeTab: SlyeTab, display: string): Box {
+// Shared with OMP's plain fallback card. Without room for the label, the heading renders as before.
+export function buildLabelledHeadingLine(heading: string, label: string): Component {
+  const fallback = new Text(heading, 0, 0);
+
+  return {
+    render(width) {
+      const remainingWidth = width - visibleWidth(heading) - visibleWidth(label);
+      if (remainingWidth < MIN_LABEL_GAP) {
+        return fallback.render(width);
+      }
+
+      return [`${heading}${" ".repeat(remainingWidth)}${label}`];
+    },
+    invalidate() {
+      fallback.invalidate();
+    },
+  };
+}
+
+function buildTabbedBox(theme: Theme, activeTab: SlyeTab, display: string, modelName?: string): Box {
   const heading = headingParts(theme, activeTab)
     .map((part) => part.text)
     .join("");
   const box = new Box(CARD_PADDING, CARD_PADDING, cardBackground(theme));
-  box.addChild(new Text(heading, 0, 0));
+  box.addChild(buildHeadingLine(theme, heading, modelName));
   box.addChild(new Markdown(display, 0, 1, getMarkdownTheme()));
   return box;
+}
+
+function buildHeadingLine(theme: Theme, heading: string, modelName: string | undefined): Component {
+  if (modelName === undefined) {
+    return new Text(heading, 0, 0);
+  }
+
+  return buildLabelledHeadingLine(heading, theme.fg("muted", modelName));
 }
 
 function tabAt(theme: Theme, activeTab: SlyeTab, x: number, y: number): SlyeTab | undefined {

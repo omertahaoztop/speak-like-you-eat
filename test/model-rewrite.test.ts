@@ -55,7 +55,10 @@ test("uses an ELI5 prompt that rebuilds the text in the speaker's plain voice wi
     ELI5_SYSTEM_PROMPT,
     /1\. Bottom line.*\n2\. What is already done:.*\n3\. What to do:.*\n4\. Useful facts:.*\n5\. What to decide:.*\n6\. Anything else:/,
   );
-  assert.match(ELI5_SYSTEM_PROMPT, /bold heading that you write in the target's language/);
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
+    /level-2 Markdown heading \(a line starting with `## `\) that you write in the target's language/,
+  );
   assert.match(
     ELI5_SYSTEM_PROMPT,
     /Keep every conclusion, number, name, date, command, path, URL, warning, condition, question, decision, and completed action, and only what the target says\./,
@@ -67,6 +70,10 @@ test("uses an ELI5 prompt that rebuilds the text in the speaker's plain voice wi
   assert.match(
     ELI5_SYSTEM_PROMPT,
     /Keep every fenced code block as a fenced code block, including examples that illustrate a point\./,
+  );
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
+    /Keep every Markdown table as a Markdown table with the same rows and columns, placed where it fits in the new structure next to the sentence it belongs to; the wording inside cells may become plainer\./,
   );
   assert.doesNotMatch(ELI5_SYSTEM_PROMPT, /\b(never|don't|do not)\b/i);
   assert.doesNotMatch(ELI5_SYSTEM_PROMPT, /\u2014/);

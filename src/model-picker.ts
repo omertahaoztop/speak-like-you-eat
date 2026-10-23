@@ -24,6 +24,10 @@ export type ModelCandidate = {
   thinkingLevel: ThinkingLevel;
 };
 
+export function getModelDisplayName(model: Pick<PiModel, "id" | "name">): string {
+  return typeof model.name === "string" && model.name.trim() !== "" ? model.name : model.id;
+}
+
 export function selectModelCandidates(
   models: readonly PiModel[],
   hasConfiguredAuth: (model: PiModel) => boolean,
@@ -44,7 +48,7 @@ export function selectModelCandidates(
       continue;
     }
 
-    const name = typeof model.name === "string" && model.name.trim() !== "" ? model.name : model.id;
+    const name = getModelDisplayName(model);
     candidates.push({
       provider: model.provider,
       id: model.id,
