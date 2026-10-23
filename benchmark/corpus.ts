@@ -1,9 +1,5 @@
-import {
-  MAXIMUM_CONTEXT_CHARACTERS,
-  type RewriteRequest,
-  serializeContext,
-  stripFencedCodeBlocks,
-} from "../src/rewrite.ts";
+import { stripFencedCodeBlocks } from "../src/rewrite.ts";
+import { type HistoricalRewriteRequest, MAXIMUM_CONTEXT_CHARACTERS, serializeContext } from "./historical-request.ts";
 
 export type FixtureExpectations = {
   expectedChange: boolean;
@@ -19,7 +15,7 @@ export type FixtureExpectations = {
 export type BenchmarkFixture = {
   id: string;
   source: string;
-  request: RewriteRequest;
+  request: HistoricalRewriteRequest;
   expectations: FixtureExpectations;
 };
 
@@ -172,7 +168,7 @@ export function verifyCorpusInvariants(): void {
       throw new Error(`Fixture ${fixture.id} is not production-eligible.`);
     }
     if (serializeContext(fixture.request.context).length > MAXIMUM_CONTEXT_CHARACTERS) {
-      throw new Error(`Fixture ${fixture.id} exceeds the production context limit.`);
+      throw new Error(`Fixture ${fixture.id} exceeds the historical context limit.`);
     }
 
     const latestUserText = [...fixture.request.context].reverse().find((entry) => entry.role === "user")?.text;

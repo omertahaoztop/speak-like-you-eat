@@ -1,13 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { AgentEndEvent, SessionEntry } from "@earendil-works/pi-coding-agent";
-import {
-  MAXIMUM_CONTEXT_CHARACTERS,
-  prepareManualRewriteRequest,
-  prepareRewriteRequest,
-  serializeContext,
-  stripFencedCodeBlocks,
-} from "../src/rewrite.ts";
+import { prepareManualRewriteRequest, prepareRewriteRequest, stripFencedCodeBlocks } from "../src/rewrite.ts";
 
 type AgentMessage = AgentEndEvent["messages"][number];
 
@@ -20,8 +14,26 @@ test("prepares the complete eligible final response at the 200-character prose b
     [entry("user", user("Explain this")), entry("assistant", target)],
   );
 
-  assert.deepEqual(result?.request.target, `${firstText}\n\n${secondText}`);
-  assert.equal(result?.entryId, "assistant");
+  assert.deepEqual(result, {
+    entryId: "assistant",
+    request: { target: `${firstText}\n\n${secondText}` },
+  });
+});
+
+test("prepares only the target when earlier user and assistant messages exist", () => {
+  const target = assistant([text("final ".repeat(40))]);
+  const branch: SessionEntry[] = [
+    entry("first-user", user("First request")),
+    entry("first-assistant", assistant([text("First response")])),
+    entry("second-user", user("Second request")),
+    entry("intermediate", assistant([text("Intermediate response")])),
+    entry("target", target),
+  ];
+
+  assert.deepEqual(prepareRewriteRequest([target], branch), {
+    entryId: "target",
+    request: { target: "final ".repeat(40) },
+  });
 });
 
 test("rejects a final response with 199 non-whitespace prose characters", () => {
@@ -37,10 +49,7 @@ test("prepares a one-character prose manual target with code", () => {
 
   assert.deepEqual(result, {
     entryId: "assistant",
-    request: {
-      target: `${code}\n\nx`,
-      context: [{ role: "user", text: "Explain this" }],
-    },
+    request: { target: `${code}\n\nx` },
   });
 });
 
@@ -142,61 +151,6 @@ test("strips only compatible fenced blocks and leaves target Markdown untouched"
   const target = assistant([text(source), text("x".repeat(200))]);
   const result = prepareRewriteRequest([target], [entry("assistant", target)]);
   assert.equal(result?.request.target, `${source}\n\n${"x".repeat(200)}`);
-});
-
-test("uses only the last two user-led turns and excludes non-conversational content", () => {
-  const target = assistant([text("final ".repeat(40))]);
-  const intermediate = assistant([
-    text("intermediate prose\n```\nconst hidden = true;\n```\nthat remains"),
-    { type: "thinking", thinking: "not context" },
-    { type: "toolCall", id: "tool-1", name: "read", arguments: {} },
-  ]);
-  const branch: SessionEntry[] = [
-    entry("old-user", user("older user")),
-    entry("old-assistant", assistant([text("older answer")])),
-    entry("previous-user", user([text("previous user\n~~~\nhidden\n~~~\nkept")])),
-    entry("tool-result", toolResult()),
-    {
-      type: "custom",
-      id: "custom",
-      parentId: "tool-result",
-      timestamp: "now",
-      customType: "other",
-      data: { text: "exclude" },
-    },
-    entry("previous-assistant", assistant([text("previous answer")])),
-    entry("current-user", user("current user")),
-    entry("intermediate", intermediate),
-    entry("target", target),
-  ];
-
-  const result = prepareRewriteRequest([intermediate, target], branch);
-
-  assert.deepEqual(result?.request.context, [
-    { role: "user", text: "previous user\nkept" },
-    { role: "assistant", text: "previous answer" },
-    { role: "user", text: "current user" },
-    { role: "assistant", text: "intermediate prose\nthat remains" },
-  ]);
-});
-
-test("context serialization stays within 8,000 characters by retaining the newest labelled suffix", () => {
-  const target = assistant([text("final ".repeat(40))]);
-  const largeIntermediateText = `${"old".repeat(10)}${"new".repeat(3_000)}`;
-  const intermediate = assistant([text(largeIntermediateText)]);
-  const branch = [
-    entry("user", user("old user".repeat(1_000))),
-    entry("assistant", intermediate),
-    entry("target", target),
-  ];
-  const automaticResult = prepareRewriteRequest([intermediate, target], branch);
-  const manualResult = prepareManualRewriteRequest(branch);
-
-  assert.equal(automaticResult?.request.context.length, 1);
-  assert.equal(automaticResult?.request.context[0]?.role, "assistant");
-  assert.equal(serializeContext(automaticResult?.request.context ?? []).length, MAXIMUM_CONTEXT_CHARACTERS);
-  assert.match(automaticResult?.request.context[0]?.text ?? "", /newnewnew$/);
-  assert.deepEqual(manualResult?.request.context, automaticResult?.request.context);
 });
 
 function text(value: string): { type: "text"; text: string } {

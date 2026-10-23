@@ -109,6 +109,10 @@ A change is complete when its behavior satisfies the requirement, the implementa
      session continuity IDs, infra conventions. Keep them short; the principles
      above do not change per project. -->
 
+## Backlog decisions
+
+The installed Backlog CLI can create a decision but cannot fill or update its body. Create every decision with `backlog decision create`, then edit only its Context, Decision, and Consequences sections directly, keeping the CLI-generated frontmatter. The operator granted this standing exception on 2026-10-23; it covers decision files only, not tasks, documents, drafts, or milestones.
+
 <!-- BACKLOG.MD GUIDELINES START -->
 <!-- backlog.md-instructions-version: 1.50.1 -->
 <CRITICAL_INSTRUCTION>

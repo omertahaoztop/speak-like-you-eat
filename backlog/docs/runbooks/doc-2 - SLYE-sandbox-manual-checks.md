@@ -3,7 +3,7 @@ id: doc-2
 title: SLYE sandbox manual checks
 type: guide
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-22 14:22'
+updated_date: '2026-10-23 16:36'
 ---
 # SLYE sandbox manual checks
 
@@ -103,7 +103,7 @@ test "$comparison_status" -eq 0
 4. Reopen Pi, run `/slye model`, select a candidate, choose `This project only`, then exit. Inspect `.pi/slye.json` and confirm it contains only `enabled` and model `provider`/`id`, with no `thinking` field.
 5. Reopen Pi, run `/slye off`, then `/slye on`. Confirm the enable notification repeats the selected provider/model and its recomputed `thinking: <level>`. Exit without submitting a prompt or making a model request.
 
-A terminal check cannot observe SLYE's provider payload. Automated evidence that the system prompt actually reaches a provider through Pi's model registry is `test/system-prompt-delivery.test.ts`'s `regression: system prompt reaches provider through the Pi ModelRegistry`. Payload-shape evidence, using a mock provider, is `test/display.test.ts`'s `calls the configured authenticated model once with an isolated exact rewrite payload` and `test/model-rewrite.test.ts`'s `builds one isolated user message with labelled context, the complete target, and the promoted prompt`; run `npm test` to exercise them.
+A terminal check cannot observe SLYE's provider payload. Automated evidence that the system prompt actually reaches a provider through Pi's model registry is `test/system-prompt-delivery.test.ts`'s `regression: system prompt reaches provider through the Pi ModelRegistry`. Payload-shape evidence, using a mock provider, is `test/display.test.ts`'s `calls the configured authenticated model twice with an isolated exact rewrite payload` and `test/model-rewrite.test.ts`'s `builds one isolated user message with the complete target and Light reminder`; run `npm test` to exercise them.
 
 ### Slice 4 / TASK-11 — manual-first and automatic rewrite checks (provider calls)
 

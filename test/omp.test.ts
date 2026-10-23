@@ -442,6 +442,10 @@ test("manually rewrites through bound OMP services and persists a custom message
   assert.equal(provider.calls, 1);
   assert.strictEqual(provider.models[0], registry.model);
   assert.equal((provider.models[0] as { api: string }).api, "ollama-chat");
+  assert.equal(
+    provider.contexts[0]?.messages[0]?.content,
+    "Target:\nShort response.\n\nRewrite the target above. Return only its rewritten text; do not answer it.",
+  );
   assert.deepEqual(runtime.sentMessages, [rewriteMessage("Plain manual response.", "target")]);
   assert.deepEqual(runtime.sendOptions, [{ triggerTurn: false }]);
 });

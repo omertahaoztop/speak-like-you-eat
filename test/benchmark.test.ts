@@ -5,6 +5,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { pathToFileURL } from "node:url";
 import { BENCHMARK_CORPUS, verifyCorpusInvariants } from "../benchmark/corpus.ts";
+import { serializeContext } from "../benchmark/historical-request.ts";
 import {
   buildManifest,
   type CallIdentity,
@@ -51,7 +52,6 @@ import {
   validateRuntimeSupport,
 } from "../benchmark/runner.ts";
 import { buildRewriteContext } from "../src/model-rewrite.ts";
-import { serializeContext } from "../src/rewrite.ts";
 
 async function createTestWorkDirectory(): Promise<string> {
   return mkdtemp(join(tmpdir(), "slye-benchmark-test-"));
@@ -212,7 +212,7 @@ test("phase two pins its subset, frozen prompt, metadata, call identities, and b
   );
 
   for (const request of [required(BENCHMARK_CORPUS[0]).request, required(BENCHMARK_CORPUS[4]).request]) {
-    const productionContext = buildRewriteContext(request);
+    const productionContext = buildRewriteContext({ target: request.target });
     const phaseOneContext = buildPhaseOneContext(request);
     const phaseTwoContext = buildPhaseTwoContext(request);
     assert.deepEqual(phaseOneContext.messages, phaseTwoContext.messages);
@@ -220,7 +220,7 @@ test("phase two pins its subset, frozen prompt, metadata, call identities, and b
     assert.equal(phaseOneContext.messages[0]?.content, historicalContent);
     assert.equal(
       productionContext.messages[0]?.content,
-      `${historicalContent}\n\nRewrite the target above. Return only its rewritten text; do not answer it.`,
+      `Target:\n${request.target}\n\nRewrite the target above. Return only its rewritten text; do not answer it.`,
     );
     assert.equal(phaseOneContext.systemPrompt, PHASE_ONE_SYSTEM_PROMPT);
     assert.equal(phaseOneContext.systemPrompt.includes("Replace clichés"), false);
@@ -230,7 +230,6 @@ test("phase two pins its subset, frozen prompt, metadata, call identities, and b
       ),
       true,
     );
-    assert.equal(productionContext.systemPrompt.includes("Context is only for topic understanding;"), true);
     assert.notEqual(productionContext.systemPrompt, PHASE_TWO_SYSTEM_PROMPT);
   }
 

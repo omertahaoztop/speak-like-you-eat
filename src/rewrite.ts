@@ -1,16 +1,9 @@
 import type { AgentEndEvent, SessionEntry, SessionMessageEntry } from "@earendil-works/pi-coding-agent";
 
 const MINIMUM_PROSE_CHARACTERS = 200;
-export const MAXIMUM_CONTEXT_CHARACTERS = 8_000;
-
-export type ContextMessage = {
-  role: "user" | "assistant";
-  text: string;
-};
 
 export type RewriteRequest = {
   target: string;
-  context: ContextMessage[];
 };
 
 export type PreparedRewriteRequest = {
@@ -35,7 +28,7 @@ export function prepareRewriteRequest(
     return undefined;
   }
 
-  return prepareRequest(branch, targetEntry, target);
+  return prepareRequest(targetEntry, target);
 }
 
 export function prepareManualRewriteRequest(branch: readonly SessionEntry[]): PreparedRewriteRequest | undefined {
@@ -54,7 +47,7 @@ export function prepareManualRewriteRequest(branch: readonly SessionEntry[]): Pr
     return undefined;
   }
 
-  return prepareRequest(branch, targetEntry, target);
+  return prepareRequest(targetEntry, target);
 }
 
 export function stripFencedCodeBlocks(text: string): string {
@@ -80,10 +73,6 @@ export function stripFencedCodeBlocks(text: string): string {
   }
 
   return proseLines.join("\n");
-}
-
-export function serializeContext(context: readonly ContextMessage[]): string {
-  return context.map((message) => `${message.role}:\n${message.text}`).join("\n\n");
 }
 
 function findEligibleTarget(messages: readonly AgentMessage[]): AssistantMessage | undefined {
@@ -141,17 +130,10 @@ function findLatestConversationalEntry(branch: readonly SessionEntry[]): Session
   return undefined;
 }
 
-function prepareRequest(
-  branch: readonly SessionEntry[],
-  targetEntry: SessionMessageEntry,
-  target: AssistantMessage,
-): PreparedRewriteRequest {
+function prepareRequest(targetEntry: SessionMessageEntry, target: AssistantMessage): PreparedRewriteRequest {
   return {
     entryId: targetEntry.id,
-    request: {
-      target: joinTextBlocks(target.content),
-      context: buildPriorContext(branch, targetEntry.id),
-    },
+    request: { target: joinTextBlocks(target.content) },
   };
 }
 
@@ -162,78 +144,6 @@ function messagesMatch(left: AssistantMessage, right: AssistantMessage): boolean
     joinTextBlocks(left.content) === joinTextBlocks(right.content) &&
     hasToolCall(left) === hasToolCall(right)
   );
-}
-
-function buildPriorContext(branch: readonly SessionEntry[], targetEntryId: string): ContextMessage[] {
-  const targetIndex = branch.findIndex((entry) => entry.id === targetEntryId);
-  if (targetIndex === -1) {
-    return [];
-  }
-
-  const entriesBeforeTarget = branch.slice(0, targetIndex);
-  const userIndexes = findUserMessageIndexes(entriesBeforeTarget);
-  if (userIndexes.length === 0) {
-    return [];
-  }
-
-  const firstTurnIndex = userIndexes[Math.max(0, userIndexes.length - 2)];
-  // The non-empty check above makes this a type-safety fallback.
-  if (firstTurnIndex === undefined) {
-    return [];
-  }
-
-  const context: ContextMessage[] = [];
-  for (const entry of entriesBeforeTarget.slice(firstTurnIndex)) {
-    const message = getContextMessage(entry);
-    if (message !== undefined) {
-      context.push(message);
-    }
-  }
-
-  return limitContext(context);
-}
-
-function findUserMessageIndexes(entries: readonly SessionEntry[]): number[] {
-  const indexes: number[] = [];
-  for (let index = 0; index < entries.length; index += 1) {
-    const entry = entries[index];
-    if (entry?.type === "message" && entry.message.role === "user") {
-      indexes.push(index);
-    }
-  }
-  return indexes;
-}
-
-function getContextMessage(entry: SessionEntry): ContextMessage | undefined {
-  if (entry.type !== "message") {
-    return undefined;
-  }
-  if (entry.message.role !== "user" && entry.message.role !== "assistant") {
-    return undefined;
-  }
-
-  const text = stripFencedCodeBlocks(joinTextBlocks(entry.message.content)).trim();
-  if (text === "") {
-    return undefined;
-  }
-
-  return { role: entry.message.role, text };
-}
-
-function limitContext(context: ContextMessage[]): ContextMessage[] {
-  const limited = [...context];
-  while (limited.length > 1 && serializeContext(limited).length > MAXIMUM_CONTEXT_CHARACTERS) {
-    limited.shift();
-  }
-
-  const newest = limited[0];
-  if (newest === undefined || serializeContext(limited).length <= MAXIMUM_CONTEXT_CHARACTERS) {
-    return limited;
-  }
-
-  const roleLabel = `${newest.role}:\n`;
-  const textLength = MAXIMUM_CONTEXT_CHARACTERS - roleLabel.length;
-  return [{ role: newest.role, text: newest.text.slice(-textLength) }];
 }
 
 function joinTextBlocks(content: unknown): string {
