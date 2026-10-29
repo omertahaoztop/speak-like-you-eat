@@ -1,7 +1,8 @@
 {
   "pi": {
-    "implementer": "openai-codex/gpt-5.6-terra",
+    "implementer": "openai/gpt-6.1-sol",
     "reviewer": "ollama-cloud/deepseek-v4.1-flash",
+    "test": "openai/gpt-6.1-sol",
     "final": "openai/gpt-6.1-sol"
   }
 }
