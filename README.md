@@ -49,10 +49,12 @@ omp plugin install speak-like-you-eat
 
 On Pi, each card holds two versions of the rewrite, shown as tabs on its heading line:
 
-- **ELI5** (active by default): rebuilds the answer for a reader who wants the point fast. It starts with the conclusion and what you need to do, then lists what was done, the steps, the key facts, and the open decisions, in plain spoken words without corporate jargon (technical terms stay), at about half the length. The prompt asks it to keep conclusions, actions, and decisions while cutting redundant evidence and secondary detail; see the [Built-in ELI5 prompt](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md#built-in-eli5-prompt-pi) for the full preservation policy. Model output can vary. Adapted from the [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills.
+- **ELI5** (active by default): rebuilds the answer for a reader who wants the point fast. It starts with the conclusion and what you need to do, then lists what was done, the steps, the key facts, and the open decisions, under headings when the answer has more than one part, keeping tables as tables, in plain spoken words without corporate jargon (technical terms stay). The prompt asks it to stay no longer than the original: wordy answers shrink, while short, plain ones are mostly reorganized at about their length. Models still sometimes run a little longer, especially when they split a dense paragraph into steps. The prompt asks it to keep conclusions, actions, and decisions while cutting redundant evidence and secondary detail; see the [Built-in ELI5 prompt](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md#built-in-eli5-prompt-pi) for the full preservation policy. Model output can vary. Adapted from the [unslop](https://github.com/cursor/plugins/blob/main/pstack/skills/unslop/SKILL.md) and [i-have-adhd](https://github.com/ayghri/i-have-adhd) skills.
 - **Light**: the lighter rewrite SLYE has always made, close to the original wording, or your custom prompt's output.
 
 Click a tab in fullscreen mode, or press `ctrl+\` in any mode, to switch. The choice applies to every card and resets when Pi restarts. On Pi each rewrite makes two provider requests, in parallel, so it costs about twice as much as one version. OMP shows only the Light version, without tabs.
+
+On both Pi and OMP, the name of the model that made the card appears small on the right of its heading line, when the window is wide enough.
 
 SLYE automatically uses the selected model's lowest supported thinking level. Automatic rewriting requires a normally completed final response with at least 200 non-whitespace prose characters outside fenced code. Manual `/slye` uses the same normal-completion, prose, and no-tool-call requirements, but has no 200-character minimum.
 
@@ -64,7 +66,7 @@ To replace the built-in Light prompt with your own `slye-prompt.md`, follow [Cus
 
 Use cheap-ish, fast models; SLYE sets reasoning for you. Both Pi tabs use the same model. These rankings are observations from a small manual trial on real and synthetic examples, not guarantees. In order:
 
-1. **Claude Haiku 5.5** - the best ELI5: it restructured well, dropped jargon, preserved code examples most reliably, and roughly halved long answers. On Light it stayed faithful and preserved code, though some jargon survived.
+1. **Claude Haiku 5.5** - the best ELI5: it restructured well, dropped jargon, and preserved code examples most reliably. On Light it stayed faithful and preserved code, though some jargon survived.
 2. **GPT-6 Luna** - removed jargon best on Light and gave a good, short ELI5, but in both tabs sometimes dropped code examples or code comments.
 3. **DeepSeek V4.1 Flash** - the fastest. Light stayed faithful to the original but kept much of the jargon; ELI5 sometimes kept jargon and dropped code examples.
 4. **Gemma 4 31B** - plain and short in both tabs, but cut content and sometimes shifted the meaning; in ELI5 it dropped most code blocks and occasionally added a question.

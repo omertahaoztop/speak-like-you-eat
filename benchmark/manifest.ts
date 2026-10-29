@@ -2,8 +2,8 @@ import { createHash } from "node:crypto";
 import { readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import type { buildRewriteContext } from "../src/model-rewrite.ts";
-import type { RewriteRequest } from "../src/rewrite.ts";
 import { BENCHMARK_CORPUS, type BenchmarkFixture, verifyCorpusInvariants } from "./corpus.ts";
+import type { HistoricalRewriteRequest } from "./historical-request.ts";
 import {
   type ActualThinking,
   BENCHMARK_CANDIDATES,
@@ -119,7 +119,7 @@ export type CallIdentity = Pick<
   | "priceModel"
 >;
 
-export type RewriteContextBuilder = (request: RewriteRequest) => ReturnType<typeof buildRewriteContext>;
+export type RewriteContextBuilder = (request: HistoricalRewriteRequest) => ReturnType<typeof buildRewriteContext>;
 
 export type BuildManifestForOptions = {
   fixtures: readonly BenchmarkFixture[];

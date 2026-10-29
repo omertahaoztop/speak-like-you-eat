@@ -78,7 +78,7 @@ test("regression: system prompt reaches provider through the Pi ModelRegistry", 
   const response = await completeModel(
     registry,
     model,
-    buildRewriteContext({ target: "Make this plain.", context: [] }, SYSTEM_PROMPT),
+    buildRewriteContext({ target: "Make this plain." }, SYSTEM_PROMPT),
     {
       signal: new AbortController().signal,
       cacheRetention: "none",

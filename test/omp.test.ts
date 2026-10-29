@@ -17,6 +17,7 @@ import {
   initTheme,
   type SessionEntry,
 } from "@earendil-works/pi-coding-agent";
+import { visibleWidth } from "@earendil-works/pi-tui";
 import { writeConfigAtomically } from "../src/config.ts";
 import type { ThinkingLevel } from "../src/model-completion.ts";
 import speakLikeYouEatOmp from "../src/omp.ts";
@@ -371,19 +372,23 @@ test("loads through the OMP entry point, translates rendering, and filters rewri
   assert.equal(contextHandler({ messages: "invalid" }, {}), undefined);
 
   const rendered = runtime.renderer("slye.rewrite")(
-    { details: { display: "Saved Markdown", targetEntryId: "target" } },
+    { details: { display: "Saved Markdown", targetEntryId: "target", modelName: "Mock model" } },
     { expanded: false },
     renderTheme(),
   ) as { render(width: number): string[] } | undefined;
-  assert.match(rendered?.render(120).join("\n") ?? "", /🤌 Speak like you eat:/);
+  const heading = rendered?.render(120)[1] ?? "";
+  assert.equal(visibleWidth(heading), 120);
+  assert.ok(heading.endsWith("Mock model "));
+  assert.doesNotMatch(rendered?.render(30).join("\n") ?? "", /Mock model/);
   assert.match(rendered?.render(120).join("\n") ?? "", /Saved Markdown/);
 
   const compiledFallback = runtime.renderer("slye.rewrite")(
-    { details: { display: "Compiled OMP card", targetEntryId: "target" } },
+    { details: { display: "Compiled OMP card", targetEntryId: "target", modelName: "Mock model" } },
     { expanded: false },
     compiledOmpTheme(),
   ) as { render(width: number): string[] } | undefined;
   assert.match(compiledFallback?.render(120).join("\n") ?? "", /🤌 Speak like you eat:/);
+  assert.match(compiledFallback?.render(120).join("\n") ?? "", /Mock model/);
   assert.match(compiledFallback?.render(120).join("\n") ?? "", /Compiled OMP card/);
 });
 
@@ -437,6 +442,10 @@ test("manually rewrites through bound OMP services and persists a custom message
   assert.equal(provider.calls, 1);
   assert.strictEqual(provider.models[0], registry.model);
   assert.equal((provider.models[0] as { api: string }).api, "ollama-chat");
+  assert.equal(
+    provider.contexts[0]?.messages[0]?.content,
+    "Target:\nShort response.\n\nRewrite the target above. Return only its rewritten text; do not answer it.",
+  );
   assert.deepEqual(runtime.sentMessages, [rewriteMessage("Plain manual response.", "target")]);
   assert.deepEqual(runtime.sendOptions, [{ triggerTurn: false }]);
 });
@@ -916,11 +925,17 @@ test("normalizes a persisted OMP rewrite after resume before duplicate detection
         customType: "slye.rewrite",
         content: "",
         display: true,
-        details: { display: "Saved response.", targetEntryId: "target" },
+        details: { display: "Saved response.", targetEntryId: "target", modelName: "Old model" },
       },
     ]),
   });
   const resumedRuntime = createExtension();
+  const rendered = resumedRuntime.renderer("slye.rewrite")(
+    { details: { display: "Saved response.", targetEntryId: "target", modelName: "Old model" } },
+    { expanded: false },
+    renderTheme(),
+  ) as { render(width: number): string[] } | undefined;
+  assert.match(rendered?.render(120)[1] ?? "", /Old model\s*$/);
 
   await resumedRuntime.command("slye").handler("", context);
 
@@ -1005,7 +1020,7 @@ function rewriteMessage(display: string, targetEntryId: string): SentMessage {
     customType: "slye.rewrite",
     content: "",
     display: true,
-    details: { display, targetEntryId },
+    details: { display, targetEntryId, modelName: "Mock model" },
     attribution: "agent",
   };
 }
@@ -1016,6 +1031,9 @@ function renderTheme(): unknown {
       return text;
     },
     bold(text: string) {
+      return text;
+    },
+    fg(_name: string, text: string) {
       return text;
     },
   };
@@ -1032,6 +1050,9 @@ function compiledOmpTheme(): unknown {
         firstBoldCall = false;
         throw new TypeError("undefined is not an object (evaluating 'theme.getColorMode')");
       }
+      return text;
+    },
+    fg(_name: string, text: string) {
       return text;
     },
   };

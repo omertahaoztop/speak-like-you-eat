@@ -1,8 +1,8 @@
 import { randomInt } from "node:crypto";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { serializeContext } from "../src/rewrite.ts";
 import { BENCHMARK_CORPUS, type BenchmarkFixture } from "./corpus.ts";
+import { serializeContext } from "./historical-request.ts";
 import type { BenchmarkResult } from "./runner.ts";
 
 export type LiteralOccurrenceShortfall = {

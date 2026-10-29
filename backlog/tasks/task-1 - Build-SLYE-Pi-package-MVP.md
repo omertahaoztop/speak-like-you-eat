@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@zambo'
 created_date: '2026-08-13 23:04'
-updated_date: '2026-08-14 21:50'
+updated_date: '2026-10-23 17:03'
 labels: []
 dependencies:
   - TASK-3
@@ -99,6 +99,8 @@ Published the standalone governed benchmark report as doc-4 and linked it from R
 Post-benchmark TASK-1.1 completed on 2026-08-14: every rewrite re-resolves the selected model and uses its lowest currently supported thinking level; the direct provider completion sends only SLYE's isolated payload; and /slye model offers a searchable scoped-first/all-authenticated Tab picker without persisting the view or thinking. TASK-1.1 records the integrated verification evidence. Branch-level documentation and final review remain before parent-task finalization.
 
 Branch closure passed on 2026-08-14. The once-per-branch docs-reviewer found no must-fix documentation drift and verified current model controls, the exact 11-file package, frozen benchmark fingerprints/numbers, authority boundaries, and correction history. The once-per-branch final-reviewer traced installation through config, picker, thinking derivation, isolated direct completion, fail-open behavior, display persistence, and non-TUI no-op; it returned verdict merge with no must-fix findings. Its local verification passed Biome, TypeScript, 73/73 tests, both unchanged no-call benchmark dry-runs, packaging, and repository hygiene. No additional model/provider call was made; current streamSimple behavior is proven by exact automated payload/auth/thinking tests, while the task preserves the earlier manual end-to-end model-call evidence as historical runtime evidence.
+
+2026-10-23: acceptance criterion #9 (bounded prior context) is superseded by decision-8 and TASK-23; rewrite requests now send only the target response.
 <!-- SECTION:NOTES:END -->
 
 ## Final Summary

@@ -3,7 +3,7 @@ id: doc-4
 title: SLYE benchmark results
 type: specification
 created_date: '2026-08-14 17:23'
-updated_date: '2026-10-22 14:22'
+updated_date: '2026-10-29 18:36'
 ---
 # SLYE benchmark results
 
@@ -14,6 +14,8 @@ Completed 2026-08-14. This report covers 117 approved calls: phase one made 108 
 The six-fixture corpus covers backup cliché, inflated prose, an already-clear control, technical literals, Markdown with fenced code, and bounded recent-context/prompt-injection resistance.
 
 Scope caveat (2026-08-17): phase two used the exact production prompt at benchmark time. The post-1.0 target-language preservation hardening changes only language/context instructions and has not been separately benchmarked. Historical results and fingerprints remain evidence for the frozen prompts, not the current exact prompt.
+
+Scope caveat (2026-10-23): the benchmark payload, described above as the exact isolated SLYE payload, carried the target plus bounded recent context. Production now sends only the target ([decision-8](../../decisions/decision-8%20-%20Send-only-the-target-response-to-the-rewrite-model.md)); the historical Context/Target framing is kept only in benchmark code. The recent-context fixture remains historical evidence of prompt-injection resistance under that older payload.
 
 ## Human review method
 

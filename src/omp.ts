@@ -1,7 +1,8 @@
 import { streamSimple } from "@earendil-works/pi-ai/compat";
 import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext } from "@earendil-works/pi-coding-agent";
-import { Box, Text } from "@earendil-works/pi-tui";
+import { Box, type Component, Text } from "@earendil-works/pi-tui";
 import speakLikeYouEat from "./index.ts";
+import { buildLabelledHeadingLine } from "./tabs.ts";
 
 const REWRITE_ENTRY_TYPE = "slye.rewrite";
 const REWRITE_HEADING = "🤌 Speak like you eat:";
@@ -18,6 +19,7 @@ type RuntimeMessageRenderer = (message: { details?: unknown }, options: unknown,
 type RuntimeTheme = {
   bg(color: string, text: string): string;
   bold(text: string): string;
+  fg(color: string, text: string): string;
 };
 type PiModelRegistry = ExtensionContext["modelRegistry"];
 type PiSessionManager = ExtensionContext["sessionManager"];
@@ -200,9 +202,18 @@ function renderRewriteFallback(data: unknown, theme: RuntimeTheme): Box | undefi
   // theme uninitialized. Preserve the original renderer first, then use the
   // actual renderer theme for a plain-text card only for that host defect.
   const box = new Box(1, 1, (text) => theme.bg("customMessageBg", text));
-  box.addChild(new Text(theme.bold(REWRITE_HEADING), 0, 0));
+  box.addChild(buildFallbackHeading(theme, data.modelName));
   box.addChild(new Text(data.display, 0, 1));
   return box;
+}
+
+function buildFallbackHeading(theme: RuntimeTheme, modelName: unknown): Component {
+  const heading = theme.bold(REWRITE_HEADING);
+  if (typeof modelName !== "string" || modelName.trim() === "") {
+    return new Text(heading, 0, 0);
+  }
+
+  return buildLabelledHeadingLine(heading, theme.fg("muted", modelName));
 }
 
 function isUninitializedOmpMarkdownTheme(error: unknown): boolean {

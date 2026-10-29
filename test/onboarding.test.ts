@@ -164,6 +164,12 @@ test("warns non-modally on an unconfigured TUI session and does nothing outside 
 test("/slye model writes the selected trusted project configuration", async (t) => {
   const directory = await mkdtemp(join(tmpdir(), "slye-onboarding-"));
   t.after(() => rm(directory, { recursive: true, force: true }));
+  const previousAgentDir = process.env.PI_CODING_AGENT_DIR;
+  process.env.PI_CODING_AGENT_DIR = join(directory, "agent");
+  t.after(() => {
+    if (previousAgentDir === undefined) delete process.env.PI_CODING_AGENT_DIR;
+    else process.env.PI_CODING_AGENT_DIR = previousAgentDir;
+  });
 
   const chosen = model("openai", "gpt-5");
   const extension = createExtension();

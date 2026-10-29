@@ -1,5 +1,5 @@
 import type { buildRewriteContext } from "../src/model-rewrite.ts";
-import { type RewriteRequest, serializeContext } from "../src/rewrite.ts";
+import { type HistoricalRewriteRequest, serializeContext } from "./historical-request.ts";
 
 export const PHASE_ONE_SYSTEM_PROMPT = [
   "Rewrite only the target in clear, everyday language.",
@@ -28,15 +28,18 @@ export const PHASE_TWO_SYSTEM_PROMPT = [
   "Output only the rewrite, with no label, preamble, or commentary.",
 ].join("\n");
 
-export function buildPhaseOneContext(request: RewriteRequest): ReturnType<typeof buildRewriteContext> {
+export function buildPhaseOneContext(request: HistoricalRewriteRequest): ReturnType<typeof buildRewriteContext> {
   return buildHistoricalContext(request, PHASE_ONE_SYSTEM_PROMPT);
 }
 
-export function buildPhaseTwoContext(request: RewriteRequest): ReturnType<typeof buildRewriteContext> {
+export function buildPhaseTwoContext(request: HistoricalRewriteRequest): ReturnType<typeof buildRewriteContext> {
   return buildHistoricalContext(request, PHASE_TWO_SYSTEM_PROMPT);
 }
 
-function buildHistoricalContext(request: RewriteRequest, systemPrompt: string): ReturnType<typeof buildRewriteContext> {
+function buildHistoricalContext(
+  request: HistoricalRewriteRequest,
+  systemPrompt: string,
+): ReturnType<typeof buildRewriteContext> {
   const context = serializeContext(request.context);
   const content = `Context:\n${context}\n\nTarget:\n${request.target}`;
 
