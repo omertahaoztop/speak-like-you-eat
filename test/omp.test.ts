@@ -925,11 +925,17 @@ test("normalizes a persisted OMP rewrite after resume before duplicate detection
         customType: "slye.rewrite",
         content: "",
         display: true,
-        details: { display: "Saved response.", targetEntryId: "target" },
+        details: { display: "Saved response.", targetEntryId: "target", modelName: "Old model" },
       },
     ]),
   });
   const resumedRuntime = createExtension();
+  const rendered = resumedRuntime.renderer("slye.rewrite")(
+    { details: { display: "Saved response.", targetEntryId: "target", modelName: "Old model" } },
+    { expanded: false },
+    renderTheme(),
+  ) as { render(width: number): string[] } | undefined;
+  assert.match(rendered?.render(120)[1] ?? "", /Old model\s*$/);
 
   await resumedRuntime.command("slye").handler("", context);
 

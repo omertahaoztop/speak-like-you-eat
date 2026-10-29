@@ -1084,6 +1084,22 @@ test("manual and automatic successes, including resumed cards, suppress duplicat
   await resumed.command.handler("", explicit.context);
   assert.equal(explicit.completionCalls, 0);
 
+  const labelled = createContext({
+    cwd: directory,
+    branch: [
+      ...branch,
+      rewriteEntry("labelled-card", {
+        display: "Saved",
+        rewrite: "Saved",
+        targetEntryId: "target",
+        modelName: "Old model",
+      }),
+    ],
+  });
+  await resumed.command.handler("", labelled.context);
+  await resumed.endAgent({ type: "agent_end", messages: [target] } as AgentEndEvent, labelled.context);
+  assert.equal(labelled.completionCalls, 0);
+
   const legacy = createContext({
     cwd: directory,
     branch: [...branch, rewriteEntry("legacy-card", { display: "Saved", targetEntryId: "  " })],
