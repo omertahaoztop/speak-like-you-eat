@@ -59,6 +59,15 @@ test("uses an ELI5 prompt that rebuilds the text in the speaker's plain voice wi
   );
   assert.match(
     ELI5_SYSTEM_PROMPT,
+    /A short target with one main point becomes the bottom line plus, at most, one short list\./,
+  );
+  assert.match(ELI5_SYSTEM_PROMPT, /Headings appear when the text has two or more parts after the bottom line/);
+  assert.match(ELI5_SYSTEM_PROMPT, /Keep the result at most as long as the target/);
+  assert.match(ELI5_SYSTEM_PROMPT, /A target that is already short and plain keeps about its length, reorganized\./);
+  assert.match(ELI5_SYSTEM_PROMPT, /Say each fact once/);
+  assert.match(ELI5_SYSTEM_PROMPT, /reread your text: it is no longer than the target/);
+  assert.match(
+    ELI5_SYSTEM_PROMPT,
     /Keep every conclusion, number, name, date, command, path, URL, warning, condition, question, decision, and completed action, and only what the target says\./,
   );
   assert.match(
