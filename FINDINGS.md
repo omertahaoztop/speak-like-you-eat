@@ -29,3 +29,13 @@
 **Practical consequence.** When availability changes, verify the actual logged provider and model, keep the `.pi/agents/` pins and local `.pandino` assignment aligned, and use `fallback-runner` visibly if the pin is unavailable.
 
 **Links.** [TASK-21](backlog/tasks/task-21%20-%20Add-Rewrite-and-Simple-tabs-to-the-SLYE-companion-card-on-Pi.md)
+
+## 2026-10-23 — Prior conversation context did not improve rewrites and made ELI5 import outside content
+
+**Hypothesis.** Sending each rewrite the last two user-led turns of conversation, including intermediate assistant prose, gives the model topic understanding that produces a better rewrite than the target alone.
+
+**Evidence.** A live ELI5 card came out more than twice as long as its target because the context held an earlier near-duplicate status message, which ELI5 merged in. A trial on 12 real final responses from local Pi sessions compared full context, user messages only, and no context across ELI5 and Light with Claude Haiku 5.5 and DeepSeek V4.1 Flash, two runs each (288 calls). Heavy copying of content from outside the target into ELI5 occurred only with full context (3 of 48 runs, including invented steps); Light never copied and kept the same length in every variant. No case showed context improving a rewrite. A prompt telling ELI5 to use only the target did not stop Haiku from copying (2 of 3 runs).
+
+**Practical consequence.** Send only the target response. Do not reintroduce conversation context to improve rewrite quality without new evidence that it helps; prompt wording alone does not stop a model from using context it receives.
+
+**Links.** TASK-23; [decision-8](backlog/decisions/decision-8%20-%20Send-only-the-target-response-to-the-rewrite-model.md); [SLYE MVP specification](backlog/docs/specs/doc-1%20-%20SLYE-MVP-specification.md)

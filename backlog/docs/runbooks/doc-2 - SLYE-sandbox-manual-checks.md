@@ -3,7 +3,7 @@ id: doc-2
 title: SLYE sandbox manual checks
 type: guide
 created_date: '2026-08-13 23:14'
-updated_date: '2026-10-23 16:36'
+updated_date: '2026-10-29 18:36'
 ---
 # SLYE sandbox manual checks
 
@@ -128,9 +128,9 @@ pi --approve
 
 Every rewrite here makes **two** secondary provider calls. Obtain explicit operator approval before each one.
 
-1. **Provider calls: one primary, then two secondary after `/slye`.** In fullscreen mode, obtain a completed answer and run `/slye`. Confirm one card whose heading reads `🤌 Speak like you eat   [ ELI5 ]  Light` and whose body is the ELI5 text.
+1. **Provider calls: one primary, then two secondary after `/slye`.** In fullscreen mode, obtain a completed answer and run `/slye`. Confirm one card whose heading starts with `🤌 Speak like you eat   [ ELI5 ]  Light`, shows the producing model's name small, muted, and right-aligned on the same line, and whose body is the ELI5 text. When the ELI5 text has two or more parts after its opening lines, confirm the part titles render as colored headings without visible `##` marks; when the answer contains a Markdown table, confirm ELI5 keeps it as a table.
 2. **Provider calls: none.** Click `Light` and confirm the body and highlight switch; click `ELI5` to switch back. Press `ctrl+\` and confirm it switches too, and that every tabbed card in the transcript shows the same tab.
-3. **Provider calls: none.** Restart Pi in regular mode (`--tui-mode regular`) and resume the session. Confirm `ctrl+\` switches tabs, that the tab starts at ELI5 again, and that cards created before TASK-21 still render without tabs.
+3. **Provider calls: none.** Restart Pi in regular mode (`--tui-mode regular`) and resume the session. Confirm `ctrl+\` switches tabs, that the tab starts at ELI5 again, that cards created before TASK-21 still render without tabs, and that cards created before TASK-23 show no model name. Narrow the terminal until the heading line no longer fits the model name and confirm the name disappears while the heading stays on one line and tabs remain clickable.
 4. **Provider calls: none.** Switch `/settings` → Theme to light and back to dark. Confirm the card background stays readable and is a muted tint of the theme's custom-message color, not the saturated default violet.
 5. **Provider calls: one primary per generated answer, then 8-10 secondary for 4-5 fresh rewrites (two per rewrite).** Each rewrite requires explicit operator approval. On 4-5 real answers, including ones where Light comes back nearly identical to the original, compare the two tabs. Record whether ELI5 drops or adds facts, changes the main language, keeps business jargon, or fails to lead with the main point.
 
