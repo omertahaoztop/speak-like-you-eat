@@ -1,11 +1,11 @@
 ---
 id: TASK-23
 title: Use Markdown headings and tables in ELI5 and show the rewrite model
-status: In Progress
+status: Done
 assignee:
   - '@zambo'
 created_date: '2026-10-23 08:56'
-updated_date: '2026-10-29 18:39'
+updated_date: '2026-10-29 19:37'
 labels:
   - eli5
   - ui
@@ -82,3 +82,9 @@ Docs review (docs-reviewer, once, whole branch): two must-fixes fixed via CLI: d
 
 Final review (final-reviewer, pinned GPT-6.1 Sol, whole branch through 338fc02): verdict merge, no must-fix. Applied its one minor: regression tests that a resumed card with a stored modelName (Pi tabbed and OMP) suppresses duplicate automatic/manual rewrites and still renders its saved label. Reviewer verified npm run check, 16-file npm pack allowlist, no benchmark code in the package; noted the feat commits imply a minor release (1.6.0). npm run check 136/136.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Merged in PR #19 (93f658b); release PR #20 merged at 935d2ea. Version 1.6.0 is published on npm with latest=1.6.0 and a provenance attestation advertised by the registry; Publish package run 40941058905 succeeded. Delivered conditional ELI5 Markdown headings, table-preservation and proportional-length prompt instructions, persisted model labels on Pi/OMP cards, and target-only requests with historical benchmark payloads preserved. Length and table retention remain model instructions rather than guarantees; corrected trial counts are in the implementation notes. Existing paired, docs and final reviews completed; npm run check rerun on released main on 2026-10-29: 136 tests pass, lint/format/typecheck pass. No product changes in this closure.
+<!-- SECTION:FINAL_SUMMARY:END -->
