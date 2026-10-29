@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.0](https://github.com/wtfzambo/speak-like-you-eat/compare/v1.5.0...v1.6.0) (2026-10-29)
+
+
+### Features
+
+* ELI5 headings, tables and length control; show the rewrite model; send only the target ([93f658b](https://github.com/wtfzambo/speak-like-you-eat/commit/93f658b3d6c4eb8adc467c658d398f621b6a660f))
+* keep ELI5 no longer than the original and size its structure to the target ([dc5fa13](https://github.com/wtfzambo/speak-like-you-eat/commit/dc5fa13931f22c8ef823645f14a925a411ddccb4))
+* send only the target response to the rewrite model ([22ca3e2](https://github.com/wtfzambo/speak-like-you-eat/commit/22ca3e29af7cce0a6733c744b98dbc949ef0da32))
+* use Markdown headings and tables in ELI5 and show the rewrite model ([1da3eb3](https://github.com/wtfzambo/speak-like-you-eat/commit/1da3eb3730b66c8d23e74e7a20e010134b0a85f1))
+
 ## [1.5.0](https://github.com/wtfzambo/speak-like-you-eat/compare/v1.4.1...v1.5.0) (2026-10-22)
 
 
