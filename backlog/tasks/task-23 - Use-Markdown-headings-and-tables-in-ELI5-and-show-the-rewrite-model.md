@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-23 08:56'
-updated_date: '2026-10-29 18:24'
+updated_date: '2026-10-29 18:35'
 labels:
   - eli5
   - ui
@@ -33,8 +33,8 @@ Live use on 2026-10-22: ELI5 bold section titles blend into the text, and ELI5 t
 - [x] #1 The built-in ELI5 prompt asks for each part after the bottom line to start with a level-2 Markdown heading (`## `) written in the target language, instead of a bold heading
 - [x] #2 The built-in ELI5 prompt keeps every Markdown table as a table with its rows and columns, allowing only plainer cell wording; the Light prompt is unchanged
 - [x] #3 Small live trials with Haiku 5.5 and DeepSeek V4.1 Flash on targets containing tables show ELI5 keeps tables as tables and uses ## headings; results are recorded as observations, not guarantees
-- [ ] #4 New Pi and OMP companion cards store the producing model display name and render it muted and right-aligned on the heading line; on narrow widths it is omitted rather than wrapping the heading, and tab clicks keep working
-- [ ] #5 Cards created before this change, and cards without a stored model, render exactly as before
+- [x] #4 New Pi and OMP companion cards store the producing model display name and render it muted and right-aligned on the heading line; on narrow widths it is omitted rather than wrapping the heading, and tab clicks keep working
+- [x] #5 Cards created before this change, and cards without a stored model, render exactly as before
 - [x] #6 Specification, README and tests cover the new prompt rules and model label; formatter, linter, type checker and tests pass
 - [x] #7 Rewrite requests on Pi and OMP send only the target response, with no prior conversation context, for both tabs; prompts and payload no longer mention context, while keeping the target as source text whose instructions are not followed and which is never answered
 - [x] #8 Historical benchmark payloads and frozen manifests are unchanged; spec, custom-prompt runbook and tests describe the target-only payload
@@ -75,4 +75,6 @@ ELI5 length trial 2026-10-23 (lab8, target-only payload, production ELI5 reminde
 ELI5 length control trial 2026-10-23 (lab ~/.cache/slye-lab; /tmp lab files had been cleared by the OS, so the 12 real targets were re-harvested from saved Pi sessions by exact target prefix and 3 texts rebuilt: code-review, a Spanish corporate status, microservices marketing). Current target-only ELI5 prompt vs final candidate (the variant plus: "Anything else" only when something secondary fits no other part, in one sentence; a choice listed under decisions is not repeated elsewhere). 15 targets x 2 prompts x haiku/deepseek x 2 runs = 120 calls, 0 failures. Median length vs target: Haiku 102% -> 99%, DeepSeek 99% -> 95%. Longer than 105%: Haiku 13/30 -> 9/30, DeepSeek 13/30 -> 7/30. "Anything else" sections: Haiku 15 -> 5, DeepSeek 3 -> 0. Literals kept 94-99% (Haiku 96% -> 94%, DeepSeek 97% -> 99%); tables Haiku 30/30 both, DeepSeek 26/30 -> 29/30; fenced code 30/30 throughout. Examples: 213-char status 178% -> 103% (lead sentence plus two bullets); code-review paragraph stays ~120% (split into done/steps/alternative/decision; candidate added one inferred sentence "the fix is local to one function"); AWS support e-mail draft 146% -> 121% but still restructured with headings (Light is the right tab for drafts to copy); Orca step-by-step 115% split per case. Operator approved the candidate. src ELI5 prompt matches the tested candidate byte-for-byte. Haiku still exceeds the target in ~3 of 10 cases, mostly when it turns a dense paragraph into steps.
 
 Correction after spec review 86fa59cb-d09a-47a (recomputed from ~/.cache/slye-lab/out.json): the "~3 of 10" residual in the previous note counted only outputs above 105%. Outputs longer than the target, candidate prompt: Haiku >100% 13/30, >105% 9/30, >110% 6/30 (current prompt 18/30, 13/30, 9/30); DeepSeek >100% 8/30, >105% 7/30, >110% 4/30 (current 14/30, 13/30, 12/30). Table denominators: only 8 of 30 runs per model had a table target: Haiku 8/8 with both prompts, DeepSeek 4/8 -> 7/8. AC #9 holds as worded (medians at or below the target) but "never longer" is an instruction, not a result: the 486-char e-mail draft still grew 121-137%. README and doc-1 describe it as an instruction with residual overshoot. Taste review 9fcf9d09-d8b3-418: applied README conditional headings, decision-6 parenthetical keeps only the why, doc-1 run-on split, prompt assertions trimmed to the two promises (length cap, heading threshold). Not applied (needs operator decision and a retest): tightening "keeps about its length" to "keeps its length" and rephrasing the self-check.
+
+Operator live acceptance 2026-10-29: the operator ran the branch in Pi and confirmed the changes ("possiamo proseguire"): ## ELI5 headings, tables kept, model label on cards, ELI5 length. With the automated rendering tests (label right-aligned at width 120, omitted at narrow widths with every line within the width, legacy and label-less cards byte-identical, Light tab click still selects with a label present, OMP label and fallback card) and installed-OMP load check, AC #4 and #5 are satisfied. Next: docs review then one whole-branch final review before the PR.
 <!-- SECTION:NOTES:END -->
