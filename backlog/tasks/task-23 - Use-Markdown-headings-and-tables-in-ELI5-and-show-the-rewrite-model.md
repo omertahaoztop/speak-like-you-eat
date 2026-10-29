@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@zambo'
 created_date: '2026-10-23 08:56'
-updated_date: '2026-10-29 18:36'
+updated_date: '2026-10-29 18:39'
 labels:
   - eli5
   - ui
@@ -79,4 +79,6 @@ Correction after spec review 86fa59cb-d09a-47a (recomputed from ~/.cache/slye-la
 Operator live acceptance 2026-10-29: the operator ran the branch in Pi and confirmed the changes ("possiamo proseguire"): ## ELI5 headings, tables kept, model label on cards, ELI5 length. With the automated rendering tests (label right-aligned at width 120, omitted at narrow widths with every line within the width, legacy and label-less cards byte-identical, Light tab click still selects with a label present, OMP label and fallback card) and installed-OMP load check, AC #4 and #5 are satisfied. Next: docs review then one whole-branch final review before the PR.
 
 Docs review (docs-reviewer, once, whole branch): two must-fixes fixed via CLI: doc-2 TASK-21 manual check now expects the model label after the tabs, ## headings and kept tables, plus a narrow-width/old-card step; doc-4 gained a 2026-10-23 scope caveat that the benchmark payload carried bounded context while production now sends only the target (decision-8). Minors fixed: README no longer claims Haiku "roughly halved long answers"; model-label sentence moved out of the Pi-only tabs paragraph and states Pi and OMP; FINDINGS.md entry for the falsified "prior context improves rewrites" hypothesis; doc-3 names benchmark/historical-request.ts. npm run check 136/136.
+
+Final review (final-reviewer, pinned GPT-6.1 Sol, whole branch through 338fc02): verdict merge, no must-fix. Applied its one minor: regression tests that a resumed card with a stored modelName (Pi tabbed and OMP) suppresses duplicate automatic/manual rewrites and still renders its saved label. Reviewer verified npm run check, 16-file npm pack allowlist, no benchmark code in the package; noted the feat commits imply a minor release (1.6.0). npm run check 136/136.
 <!-- SECTION:NOTES:END -->
